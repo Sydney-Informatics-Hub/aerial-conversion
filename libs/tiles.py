@@ -1,8 +1,11 @@
-import os 
-import itertools
 import rasterio as rio
-from rasterio import windows as riow
+import itertools
+import rasterio.windows as riow
+import os
 
+# ==================================================================================================
+# Functions for creating tiles from raster files
+# ==================================================================================================
 
 def get_tiles(geotiff:rio.DatasetReader, tile_width:int=2000, tile_height:int=2000, map_units:bool=False, offset:float=0.0):
 
@@ -71,23 +74,3 @@ def save_tiles(geotiff:rio.DatasetReader, out_path:str, tile_size:int=2000, tile
             outds.write(geotiff.read(window=window))
     # Close the big raster now that we are done with it.
     # geotiff.close()
-
-def wkt_parser(wkt_str:str):
-    """
-    Parses a WKT string to extract the local coordinate system.
-
-    Args:
-        wkt_str (str): WKT string
-
-    Returns:
-        str: Local coordinate system
-    """
-    
-    wkt = wkt_str.split('"')
-    set = False
-    for x in wkt:
-        if set is True:
-            return x
-        if x == "LOCAL_CS[":
-            set = True
-    return wkt_str

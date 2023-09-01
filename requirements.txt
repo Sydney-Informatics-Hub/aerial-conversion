@@ -1,6 +1,5 @@
 tqdm
 pandas
-opencv-python
 pillow
 matplotlib
 shapely
@@ -8,3 +7,5 @@ geopandas
 rioxarray
 rasterio
 geoplot
+fiona
+pre-commit

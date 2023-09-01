@@ -1,10 +1,8 @@
-import os 
-import itertools
 import rasterio as rio
 import pandas as pd
+from tqdm import tqdm
 import geopandas as gpd
-from rasterio import windows as riow
-from shapely.geometry import MultiPoint
+from shapely.geometry import MultiPoint, box
 import fiona
 
 # ==================================================================================================
@@ -87,7 +85,7 @@ def spatial_to_pixel_rio(raster, x, y):
     return px,py
 
 
-def spatial_polygon_to_pixel_rio(raster, polygon):    
+def spatial_polygon_to_pixel_rio(raster, polygon)->list:    
     """
     Converts spatial polygon to pixel polygon using rasterio.
 
@@ -107,9 +105,66 @@ def spatial_polygon_to_pixel_rio(raster, polygon):
     return(converted_coords)
 
 
+def get_tile_polygons(raster_tile, geojson, project_crs = "EPSG:3577", filter = True):
+    
+    """
+    Create polygons from a geosjon for an individual raster tile.
+    
+    Args:
+        raster_tile: a file name referring to the raster tile to be loaded
+        geojson: a geodataframe with polygons
+        
+    Returns: 
+        tile_polygon: geodataframe with polygons within the raster's extent
+    """
+    
+    # Load raster tile
+    raster_tile = rio.open(raster_tile)
+    raster_extent = gpd.GeoDataFrame({"id":1,"geometry":[box(*raster_tile.bounds)]}, crs=project_crs)
+    geojson = geojson.to_crs(project_crs)
+    tile_polygons = geojson.clip(raster_extent)
+    
+    # Split multipolygon 
+    tile_polygons = tile_polygons.explode(index_parts=False)
+    tile_polygons = tile_polygons.reset_index(drop=True)
+    # Filter out zero area polygons
+    tile_polygons = tile_polygons[tile_polygons.geometry.area > 0]
+    if filter == True:
+        tile_polygons = tile_polygons[tile_polygons.geometry.area > 5000]
+    tile_polygons = tile_polygons.reset_index(drop=True)
+    
+    return(tile_polygons)
 
 
 
+def pixel_polygons_for_raster_tiles(raster_file_list, geojson, verbose = 1):
+    """
+    Create pixel polygons for a list of raster tiles.
 
-   
+    Args:
+        raster_file_list (list): List of raster files
+        geojson (gpd.GeoDataFrame): GeoDataFrame containing polygons
+        verbose (int): Verbosity level
+
+    Returns:
+        pixel_df (pd.DataFrame): DataFrame containing pixel polygons
+    """
+    tmp_list= []
+
+    for index, file in enumerate(raster_file_list):
+        tmp = get_tile_polygons(file, geojson)
+        tmp['raster_tile'] = file
+        tmp['image_id'] = index
+        tmp_list.append(tmp)
+        
+    pixel_df = pd.concat(tmp_list).reset_index() 
+    pixel_df = pixel_df.drop(columns=['index'])
+    if verbose > 0:
+        tqdm.pandas()
+        pixel_df['pixel_polygon'] = pixel_df.progress_apply(lambda row: spatial_polygon_to_pixel_rio(row['raster_tile'], row['geometry']), axis = 1)
+    else:
+        pixel_df['pixel_polygon'] = pixel_df.apply(lambda row: spatial_polygon_to_pixel_rio(row['raster_tile'], row['geometry']), axis = 1)
+    pixel_df['annot_id'] = range(0, 0+len(pixel_df))
+    
+    return(pixel_df)
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import glob
+import logging
 import os
 import os.path
 import traceback
@@ -17,6 +18,8 @@ from libs.coco import (
 )
 from libs.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
 from libs.tiles import save_tiles
+
+log = logging.getLogger(__name__)
 
 
 def assemble_coco_json(
@@ -105,10 +108,12 @@ def main(args=None):
     tile_size = args.tile_size
     user_crs = args.crs
 
+    log.info(f"Creating {args.tile_size} m*m tiles from {args.raster_file}")
+
     # Read input files
     geotiff = rio.open(raster_path)
     geojson = gpd.read_file(geojson_path)
-
+    # geojson.crs
     # Reproject geojson on geotiff
     if user_crs is None:
         user_crs = geotiff.crs.to_wkt()
@@ -117,7 +122,7 @@ def main(args=None):
     try:
         geojson = geojson.to_crs(user_crs)
     except Exception as e:
-        print("CRS not recognized, please specify a valid CRS")
+        log.error("CRS not recognized, please specify a valid CRS. Error message: {e}")
         traceback.print_exc()
         raise e
 
@@ -130,7 +135,7 @@ def main(args=None):
     for filename in glob.iglob(os.path.join(f"{out_path}", "*.tif")):
         raster_file_list.append(filename)
 
-    print(f"{len(raster_file_list)} raster tiles created")
+    log.info(f"{len(raster_file_list)} raster tiles created")
 
     # Create class_id for category mapping
     geojson["class_id"] = geojson[args.class_column].factorize()[0]
@@ -150,7 +155,7 @@ def main(args=None):
 
     info_json = open(args.info, "r")
 
-    print("Converting to COCO")
+    log.info("Converting to COCO")
     # We are now ready to make the COCO JSON.
     spatial_coco = assemble_coco_json(
         raster_file_list, geojson, license_json, info_json, categories_json
@@ -159,7 +164,7 @@ def main(args=None):
     # Write COCO JSON to file.
     with open(args.json_name, "w") as f:
         f.write(spatial_coco.toJSON())
-    print(f"COCO JSON saved to {args.json_name}")
+    log.info(f"COCO JSON saved to {args.json_name}")
 
     # if args.save_gdf == True:
 

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import logging
+
 import fiona
 import geopandas as gpd
 import pandas as pd
@@ -9,6 +11,7 @@ from tqdm import tqdm
 # ==================================================================================================
 # Functions for converting between spatial and pixel coordinates
 # ==================================================================================================
+log = logging.getLogger(__name__)
 
 
 def wkt_parser(wkt_str: str):
@@ -26,9 +29,12 @@ def wkt_parser(wkt_str: str):
     set = False
     for x in wkt:
         if set is True:
+            log.debug(f"LOCAL_CS is {x}")
             return x
         if x == "LOCAL_CS[":
+            log.debug(f"Found LOCAL_CS[ at {wkt.index(x)}")
             set = True
+    log.info(f"wtkt_str: {wkt_str}")
     return wkt_str
 
 

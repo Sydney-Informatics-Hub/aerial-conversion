@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import itertools
+import logging
 import os
 
 import rasterio as rio
@@ -8,6 +9,7 @@ import rasterio.windows as riow
 # ==================================================================================================
 # Functions for creating tiles from raster files
 # ==================================================================================================
+log = logging.getLogger(__name__)
 
 
 def get_tiles(
@@ -41,6 +43,7 @@ def get_tiles(
                 tile_height / cell_x + 0.5
             )
         else:
+            log.error("ValueError: Coefficient a from raster.transform.a is not width.")
             raise ValueError("Coefficient a from raster.transform.a is not width.")
 
     ncols, nrows = geotiff.meta["width"], geotiff.meta["height"]
@@ -51,6 +54,7 @@ def get_tiles(
     big_window = riow.Window(col_off=0, row_off=0, width=ncols, height=nrows)
 
     if offset > 0:
+        log.error("NotImplementedError: Offset not implemented yet.")
         raise NotImplementedError("Offset not implemented yet.")
         offset = int(tile_width * offset)
         corners = itertools.product(
@@ -86,6 +90,12 @@ def save_tiles(
         None
     """
 
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+        log.info(f"created '{out_path}'")
+    else:
+        log.info(f"'{out_path}' already exists")
+
     # with rio.open(raster_geotiffpath) as geotiff:
     tile_width, tile_height = tile_size, tile_size
     meta = geotiff.meta.copy()
@@ -94,10 +104,10 @@ def save_tiles(
     ):
         meta["transform"] = transform
         meta["width"], meta["height"] = window.width, window.height
-        outpath = os.path.join(
+        tile_path = os.path.join(
             out_path, tile_template.format(int(window.col_off), int(window.row_off))
         )
-        with rio.open(outpath, "w", **meta) as outds:
+        with rio.open(tile_path, "w", **meta) as outds:
             outds.write(geotiff.read(window=window))
     # Close the big raster now that we are done with it.
     # geotiff.close()

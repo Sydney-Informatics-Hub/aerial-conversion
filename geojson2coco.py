@@ -23,10 +23,10 @@ log = logging.getLogger(__name__)
 
 
 def assemble_coco_json(
-    raster_file_list, geojson, license_json, info_json, categories_json
+    raster_file_list, geojson, license_json, info_json, categories_json, user_crs
 ):
 
-    pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson)
+    pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson, user_crs)
 
     coco = coco_json()
     coco.images = coco_image_annotations(raster_file_list).images
@@ -101,14 +101,29 @@ def main(args=None):
     Create tiles from raster and convert to COCO JSON format.
     """
 
-    print(f"Creating {args.tile_size} m*m tiles from {args.raster_file}")
+    # raster_path =     "/home/sahand/Data/GIS2COCO/chatswood/chatswood.tif"
+    # geojson_path =    "/home/sahand/Data/GIS2COCO/chatswood/chatswood.geojson"
+    # out_path =        "/home/sahand/Data/GIS2COCO/chatswood/tiles/"
+    # tile_size =       500
+    # user_crs =        None
+    # class_column = "zone_name" # "zone_name" # "zone_code"
+    # trim_class = 0
+    # license = None
+    # info = "/home/sahand/Data/GIS2COCO/chatswood/info.json"
+    # json_name = "/home/sahand/Data/GIS2COCO/chatswood/coco_from_gis.json"
+
     raster_path = args.raster_file
     geojson_path = args.polygon_file
     out_path = args.tile_dir
     tile_size = args.tile_size
     user_crs = args.crs
+    class_column = args.class_column
+    trim_class = args.trim_class
+    license = args.license
+    info = args.info
+    json_name = args.json_name
 
-    log.info(f"Creating {args.tile_size} m*m tiles from {args.raster_file}")
+    log.info(f"Creating {tile_size} m*m tiles from {raster_path}")
 
     # Read input files
     geotiff = rio.open(raster_path)
@@ -138,11 +153,11 @@ def main(args=None):
     log.info(f"{len(raster_file_list)} raster tiles created")
 
     # Create class_id for category mapping
-    geojson["class_id"] = geojson[args.class_column].factorize()[0]
-    categories_json = make_category_object(geojson, args.class_column, args.trim_class)
+    geojson["class_id"] = geojson[class_column].factorize()[0]
+    categories_json = make_category_object(geojson, class_column, trim_class)
 
     # If license is not supplied, use MIT by default
-    if args.license is None:
+    if license is None:
         license_json = {
             "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/",
             "id": 1,
@@ -151,20 +166,20 @@ def main(args=None):
     else:
         # Read user supplied license
         # TODO: incorporate different licenses depending on images: this feature is almost never used but would be nice to support.
-        license_json = open(args.license, "r")
+        license_json = open(license, "r")
 
-    info_json = open(args.info, "r")
+    info_json = open(info, "r")
 
     log.info("Converting to COCO")
     # We are now ready to make the COCO JSON.
     spatial_coco = assemble_coco_json(
-        raster_file_list, geojson, license_json, info_json, categories_json
+        raster_file_list, geojson, license_json, info_json, categories_json, user_crs
     )
 
     # Write COCO JSON to file.
-    with open(args.json_name, "w") as f:
+    with open(json_name, "w") as f:
         f.write(spatial_coco.toJSON())
-    log.info(f"COCO JSON saved to {args.json_name}")
+    log.info(f"COCO JSON saved to {json_name}")
 
     # if args.save_gdf == True:
 

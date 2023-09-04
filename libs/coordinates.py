@@ -99,6 +99,7 @@ def spatial_polygon_to_pixel_rio(raster, polygon) -> list:
     """
     converted_coords = []
     for point in list(MultiPoint(polygon.exterior.coords).geoms):
+        log.debug(f"Converting {point} to pixel coordinates in raster {raster}")
         x, y = spatial_to_pixel_rio(raster, point.x, point.y)
         pixel_point = x, y
         converted_coords.append(pixel_point)
@@ -136,7 +137,7 @@ def get_tile_polygons(raster_tile, geojson, project_crs="EPSG:3577", filter=True
     return tile_polygons
 
 
-def pixel_polygons_for_raster_tiles(raster_file_list, geojson, verbose=1):
+def pixel_polygons_for_raster_tiles(raster_file_list, geojson, project_crs, verbose=1):
     """Create pixel polygons for a list of raster tiles.
 
     Args:
@@ -148,15 +149,17 @@ def pixel_polygons_for_raster_tiles(raster_file_list, geojson, verbose=1):
         pixel_df (pd.DataFrame): DataFrame containing pixel polygons
     """
     tmp_list = []
-
+    log.info(f"Creating pixel polygons for {len(raster_file_list)} tiles")
     for index, file in enumerate(raster_file_list):
-        tmp = get_tile_polygons(file, geojson)
-        tmp["raster_tile"] = file
+        tmp = get_tile_polygons(file, geojson, project_crs)
+        tmp["raster_tile"] = rio.open(file)
         tmp["image_id"] = index
         tmp_list.append(tmp)
 
+    log.info(f"Concatenating {len(tmp_list)} GeoDataFrames")
     pixel_df = pd.concat(tmp_list).reset_index()
     pixel_df = pixel_df.drop(columns=["index"])
+    log.info(f"Creating pixel polygons for {pixel_df.shape[0]} polygons")
     if verbose > 0:
         tqdm.pandas()
         pixel_df["pixel_polygon"] = pixel_df.progress_apply(
@@ -173,5 +176,5 @@ def pixel_polygons_for_raster_tiles(raster_file_list, geojson, verbose=1):
             axis=1,
         )
     pixel_df["annot_id"] = range(0, 0 + len(pixel_df))
-
+    log.info(f"Pixel polygons created for {pixel_df.shape[0]} polygons")
     return pixel_df

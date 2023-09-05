@@ -9,3 +9,4 @@ rasterio
 geoplot
 fiona
 pre-commit
+Sphinx

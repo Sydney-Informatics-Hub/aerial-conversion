@@ -100,17 +100,17 @@ def main(args=None):
     """
     Create tiles from raster and convert to COCO JSON format.
     """
-
-    # raster_path =     "/home/sahand/Data/GIS2COCO/chatswood/chatswood.tif"
-    # geojson_path =    "/home/sahand/Data/GIS2COCO/chatswood/chatswood.geojson"
-    # out_path =        "/home/sahand/Data/GIS2COCO/chatswood/tiles/"
+    # root_dir = "~/Data/GIS2COCO/"
+    # raster_path =     os.path.join(root_dir,"chatswood/chatswood.tif")
+    # geojson_path =    os.path.join(root_dir,"chatswood/chatswood.geojson")
+    # out_path =        os.path.join(root_dir,"chatswood/tiles/")
     # tile_size =       500
     # user_crs =        None
     # class_column = "zone_name" # "zone_name" # "zone_code"
     # trim_class = 0
     # license = None
-    # info = "/home/sahand/Data/GIS2COCO/chatswood/info.json"
-    # json_name = "/home/sahand/Data/GIS2COCO/chatswood/coco_from_gis.json"
+    # info = os.path.join(root_dir,"chatswood/info.json")
+    # json_name = os.path.join(root_dir,"chatswood/coco_from_gis.json")
 
     raster_path = args.raster_file
     geojson_path = args.polygon_file

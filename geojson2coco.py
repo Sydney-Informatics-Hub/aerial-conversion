@@ -23,10 +23,10 @@ log = logging.getLogger(__name__)
 
 
 def assemble_coco_json(
-    raster_file_list, geojson, license_json, info_json, categories_json, user_crs
+    raster_file_list, geojson, license_json, info_json, categories_json
 ):
 
-    pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson, user_crs)
+    pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson)
 
     coco = coco_json()
     coco.images = coco_image_annotations(raster_file_list).images
@@ -34,6 +34,7 @@ def assemble_coco_json(
     coco.license = license_json
     coco.categories = categories_json
     coco.info = info_json
+    coco.type = "instances"
 
     return coco
 
@@ -100,17 +101,17 @@ def main(args=None):
     """
     Create tiles from raster and convert to COCO JSON format.
     """
-    # root_dir = "~/Data/GIS2COCO/"
-    # raster_path =     os.path.join(root_dir,"chatswood/chatswood.tif")
-    # geojson_path =    os.path.join(root_dir,"chatswood/chatswood.geojson")
-    # out_path =        os.path.join(root_dir,"chatswood/tiles/")
-    # tile_size =       500
-    # user_crs =        None
-    # class_column = "zone_name" # "zone_name" # "zone_code"
+    # root_dir = "/home/sahand/Data/GIS2COCO/"
+    # raster_path = os.path.join(root_dir, "chatswood/chatswood.tif")
+    # geojson_path = os.path.join(root_dir, "chatswood/chatswood.geojson")
+    # out_path = os.path.join(root_dir, "chatswood/tiles/")
+    # tile_size = 500
+    # user_crs = None
+    # class_column = "zone_name"  # "zone_name" # "zone_code"
     # trim_class = 0
     # license = None
-    # info = os.path.join(root_dir,"chatswood/info.json")
-    # json_name = os.path.join(root_dir,"chatswood/coco_from_gis.json")
+    # info = os.path.join(root_dir, "chatswood/info.json")
+    # json_name = os.path.join(root_dir, "chatswood/coco_from_gis.json")
 
     raster_path = args.raster_file
     geojson_path = args.polygon_file
@@ -173,7 +174,7 @@ def main(args=None):
     log.info("Converting to COCO")
     # We are now ready to make the COCO JSON.
     spatial_coco = assemble_coco_json(
-        raster_file_list, geojson, license_json, info_json, categories_json, user_crs
+        raster_file_list, geojson, license_json, info_json, categories_json
     )
 
     # Write COCO JSON to file.

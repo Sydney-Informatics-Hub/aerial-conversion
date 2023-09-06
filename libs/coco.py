@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os
 
 import geopandas as gpd
 import pandas as pd
 import rasterio as rio
 from shapely.geometry import Polygon
+
+log = logging.getLogger(__name__)
 
 
 class coco_json:

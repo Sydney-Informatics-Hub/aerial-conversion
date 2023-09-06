@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
+# import os
 import fiona
 import geopandas as gpd
 import pandas as pd
@@ -11,6 +12,7 @@ from tqdm import tqdm
 # ==================================================================================================
 # Functions for converting between spatial and pixel coordinates
 # ==================================================================================================
+
 log = logging.getLogger(__name__)
 
 
@@ -106,38 +108,41 @@ def spatial_polygon_to_pixel_rio(raster, polygon) -> list:
     return converted_coords
 
 
-def get_tile_polygons(raster_tile, geojson, project_crs="EPSG:3577", filter=True):
+def get_tile_polygons(raster_tile: str, geojson: gpd.GeoDataFrame, filter: int = 0):
     """Create polygons from a geosjon for an individual raster tile.
 
     Args:
-        raster_tile: a file name referring to the raster tile to be loaded
-        geojson: a geodataframe with polygons
+        raster_tile: (str) a file name referring to the raster tile to be loaded
+        geojson: (gpd.GeoDataFrame) a geodataframe with polygons
+        filter: (int) an integer to filter out polygons with area less than the filter value
 
     Returns:
         tile_polygon: geodataframe with polygons within the raster's extent
     """
-
+    # print(geojson.shape)
     # Load raster tile
     raster_tile = rio.open(raster_tile)
     raster_extent = gpd.GeoDataFrame(
-        {"id": 1, "geometry": [box(*raster_tile.bounds)]}, crs=project_crs
+        {"id": 1, "geometry": [box(*raster_tile.bounds)]}, crs=geojson.crs
     )
-    geojson = geojson.to_crs(project_crs)
+    # geojson = geojson.to_crs(geojson)
     tile_polygons = geojson.clip(raster_extent)
 
     # Split multipolygon
     tile_polygons = tile_polygons.explode(index_parts=False)
     tile_polygons = tile_polygons.reset_index(drop=True)
     # Filter out zero area polygons
-    tile_polygons = tile_polygons[tile_polygons.geometry.area > 0]
-    if filter is True:
-        tile_polygons = tile_polygons[tile_polygons.geometry.area > 5000]
+    tile_polygons = tile_polygons[tile_polygons.geometry.area > filter]
+    # if filter is True:
+    #     tile_polygons = tile_polygons[tile_polygons.geometry.area > 5000]
     tile_polygons = tile_polygons.reset_index(drop=True)
-
+    # print(tile_polygons.shape)
     return tile_polygons
 
 
-def pixel_polygons_for_raster_tiles(raster_file_list, geojson, project_crs, verbose=1):
+def pixel_polygons_for_raster_tiles(
+    raster_file_list: list, geojson: gpd.GeoDataFrame, verbose=1
+):
     """Create pixel polygons for a list of raster tiles.
 
     Args:
@@ -151,7 +156,7 @@ def pixel_polygons_for_raster_tiles(raster_file_list, geojson, project_crs, verb
     tmp_list = []
     log.info(f"Creating pixel polygons for {len(raster_file_list)} tiles")
     for index, file in enumerate(raster_file_list):
-        tmp = get_tile_polygons(file, geojson, project_crs)
+        tmp = get_tile_polygons(file, geojson, 0)
         tmp["raster_tile"] = rio.open(file)
         tmp["image_id"] = index
         tmp_list.append(tmp)

@@ -102,7 +102,7 @@ def spatial_polygon_to_pixel_rio(raster, polygon) -> list:
     converted_coords = []
     for point in list(MultiPoint(polygon.exterior.coords).geoms):
         log.debug(f"Converting {point} to pixel coordinates in raster {raster}")
-        x, y = spatial_to_pixel_rio(raster, point.x, point.y)
+        y, x = spatial_to_pixel_rio(raster, point.x, point.y)
         pixel_point = x, y
         converted_coords.append(pixel_point)
     return converted_coords

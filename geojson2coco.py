@@ -27,6 +27,9 @@ def assemble_coco_json(
 ):
 
     pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson)
+    # pixel_poly_df.to_csv(json_name[:-5]+"_df.csv")
+    # pixel_poly_df_sample = pixel_poly_df.sample(1)
+    # pixel_poly_df_sample.to_csv(json_name[:-5]+".csv")
 
     coco = coco_json()
     coco.images = coco_image_annotations(raster_file_list).images

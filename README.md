@@ -23,6 +23,19 @@ conda activate aerial-conversion-dev
 pip install -r requirements.txt
 ```
 
+## Usage
+
+```
+python geojson2coco.py \
+                --raster-file /path/to/data/chatswood_hd.tif \
+                --polygon-file /path/to/data/chatswood.geojson \
+                --tile-dir /path/to/data/big_tiles \
+                --json-name /path/to/data/coco_from_gis_hd.json \
+                --info /path/to/data/info.json \
+                --class-column zone_name 
+
+```
+
 <!-- ---
 
 ## Documentation

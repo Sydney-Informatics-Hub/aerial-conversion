@@ -47,17 +47,14 @@ Please read the [documentation](https://github.com/Sydney-Informatics-Hub/aerial
 
 ## Contributing to the Project
 
-Please make sure to install all the required libraries in the [requirements.txt](https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/requirements-dev.txt) file for development.
-
-Please see below for the contribution guid.
-
+Please make sure to install all the required libraries in the [requirements.txt](https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/requirements.txt) file for development.
 
 
 ### Commit rules:
 
 In this project, `pre-commit` is being used. Hence, please make sure you have it in your env by `pip install pre-commit`.
 
-Make sure to run pre-commit on each run. You can run it before commit on all files to check you code by typing `pre-commit run --all-files --verbose`, without staging your pre-commit config.
+Make sure to run pre-commit on each run. You can run it before commit on all files to check your code by typing `pre-commit run --all-files --verbose`, without staging your pre-commit config.
 Otherwise, you can run it via `pre-commit run` only, or just envoking it while committing (and failing, and committing again).
 
 Alternatively, to add the hook, after installing pre-commit, run:

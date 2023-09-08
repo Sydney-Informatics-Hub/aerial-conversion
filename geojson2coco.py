@@ -141,7 +141,7 @@ def main(args=None):
     try:
         geojson = geojson.to_crs(user_crs)
     except Exception as e:
-        log.error("CRS not recognized, please specify a valid CRS. Error message: {e}")
+        log.error(f"CRS not recognized, please specify a valid CRS. Error message: {e}")
         traceback.print_exc()
         raise e
 

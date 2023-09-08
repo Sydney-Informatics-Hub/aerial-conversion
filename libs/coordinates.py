@@ -82,11 +82,11 @@ def spatial_to_pixel_rio(raster, x, y):
         y (float): latitudinal coordinate in spatial units
 
     Returns:
-        tuple: (x,y) pixel coordinates
+        tuple: (row_ind,col_ind) pixel coordinates
     """
 
-    px, py = raster.index(x, y)  # lon,lat
-    return px, py
+    row_ind, col_ind = raster.index(x, y)  # lon,lat
+    return row_ind, col_ind
 
 
 def spatial_polygon_to_pixel_rio(raster, polygon) -> list:

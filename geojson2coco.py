@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def assemble_coco_json(
-    raster_file_list, geojson, license_json, info_json, categories_json
+    raster_file_list, geojson, license_json, info_json, categories_json, colour
 ):
 
     pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson)
@@ -32,7 +32,7 @@ def assemble_coco_json(
     # pixel_poly_df_sample.to_csv(json_name[:-5]+".csv")
 
     coco = coco_json()
-    coco.images = coco_image_annotations(raster_file_list).images
+    coco.images = coco_image_annotations(raster_file_list, colour).images
     coco.annotations = coco_polygon_annotations(pixel_poly_df)
     coco.license = license_json
     coco.categories = categories_json
@@ -89,6 +89,11 @@ def main(args=None):
         help="If True, saves a short file name in the COCO for images.",
     )
     ap.add_argument(
+        "--colour",
+        type=bool,
+        help="If True, PNG images will be saved as colour images.",
+    )
+    ap.add_argument(
         "--license",
         type=Path,
         help="Path to a license description in COCO JSON format. If not supplied, will default to MIT license.",
@@ -105,7 +110,7 @@ def main(args=None):
     Create tiles from raster and convert to COCO JSON format.
     """
     # root_dir = "/home/sahand/Data/GIS2COCO/"
-    # raster_path = os.path.join(root_dir, "chatswood/chatswood.tif")
+    # raster_path = os.path.join(root_dir, "chatswood/chatswood_hd.tif")
     # geojson_path = os.path.join(root_dir, "chatswood/chatswood.geojson")
     # out_path = os.path.join(root_dir, "chatswood/tiles/")
     # tile_size = 500
@@ -126,6 +131,7 @@ def main(args=None):
     license = args.license
     info = args.info
     json_name = args.json_name
+    colour = args.colour
 
     log.info(f"Creating {tile_size} m*m tiles from {raster_path}")
 
@@ -177,7 +183,7 @@ def main(args=None):
     log.info("Converting to COCO")
     # We are now ready to make the COCO JSON.
     spatial_coco = assemble_coco_json(
-        raster_file_list, geojson, license_json, info_json, categories_json
+        raster_file_list, geojson, license_json, info_json, categories_json, colour
     )
 
     # Write COCO JSON to file.

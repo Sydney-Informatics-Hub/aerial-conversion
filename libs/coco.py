@@ -87,20 +87,35 @@ def make_category_object(geojson: gpd.GeoDataFrame, class_column: str, trim: int
     return categories_json
 
 
-def raster_to_coco(raster_path: str, index: int, extension: str = "png"):
+def raster_to_coco(
+    raster_path: str,
+    index: int,
+    extension: str = "png",
+    bands: int = 3,
+    colour: bool = True,
+):
     """Function to convert a raster to a COCO image object.
 
     Args:
         raster_path (str): Path to raster
         index (int): Index of raster
         extension (str, optional): Extension of image. Defaults to "png".
+        colour (bool, optional): If True, save image in colour. Defaults to True.
 
     Returns:
         image (coco_image): COCO image object
     """
 
     geotiff = rio.open(raster_path)
-    raster = geotiff.read(1)
+    raster = geotiff.read()
+    # print(raster[:3].shape)
+    if bands > 1:
+        raster = raster[:bands]
+        if colour is False:
+            # take the average of raster bands
+            raster = raster.mean(axis=0)
+            bands = 1
+    # print(raster.shape)
     raster_name = os.path.splitext(raster_path)[0]
     image_name = f"{raster_name}.{extension}"
 
@@ -111,12 +126,15 @@ def raster_to_coco(raster_path: str, index: int, extension: str = "png"):
             driver=extension.upper(),
             height=geotiff.shape[0],
             width=geotiff.shape[1],
-            count=1,
+            count=bands,
             dtype=geotiff.dtypes[0],
             nodata=0,
             compress="deflate",
         ) as dst:
-            dst.write(raster, 1)
+            if colour is False:
+                dst.write(raster, 1)
+            else:
+                dst.write(raster)
 
     # Create each individual image object
     image = coco_json.coco_image()
@@ -200,7 +218,7 @@ def coco_polygon_annotations(polygon_df):
     return annotations_tmp
 
 
-def coco_image_annotations(raster_file_list):
+def coco_image_annotations(raster_file_list, colour):
     """Function to convert a list of rasters to a list of COCO image objects.
 
     Args:
@@ -212,10 +230,7 @@ def coco_image_annotations(raster_file_list):
 
     images = coco_json.coco_images()
     images.images = [
-        raster_to_coco(
-            raster_file,
-            ind,
-        )
+        raster_to_coco(raster_file, ind, "png", 3, colour)
         for ind, raster_file in enumerate(raster_file_list)
     ]
 

@@ -1,0 +1,14 @@
+FROM python:3.9
+
+LABEL version="0.0.1"
+LABEL description="Docker image for aerial-conversion"
+LABEL maintainer="Sahand Vahidnia <@sahandv>"
+
+
+# COPY ../aerial-conversion /usr/local/lib/python3.9/site-packages/aerial-conversion/ # if we want to treat is as package, the code should be copied here
+COPY requirements.txt /
+# Install dependencies
+RUN pip install -r /requirements.txt 
+
+
+CMD ["/bin/bash"]

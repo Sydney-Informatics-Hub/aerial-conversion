@@ -32,10 +32,8 @@ python geojson2coco.py \
                 --tile-dir /path/to/data/big_tiles \
                 --json-name /path/to/data/coco_from_gis_hd.json \
                 --info /path/to/data/info.json \
-                --class-column zone_name 
-
+                --class-column zone_name \
 ```
-
 <!-- ---
 
 ## Documentation

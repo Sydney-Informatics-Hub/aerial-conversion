@@ -190,10 +190,8 @@ def main(args=None):
         f.write(spatial_coco.toJSON())
     log.info(f"COCO JSON saved to {json_name}")
 
-    # if args.save_gdf == True:
-
+    # if args.save_gdf:
     #     pixel_poly_df['raster_tile_name'] = pixel_poly_df.apply(lambda row: os.path.basename(row['raster_tile']), axis = 1)
-
     #     with open ("gdf_output.csv", "w") as f:
     #         f.write(pixel_poly_df)
 

@@ -112,3 +112,55 @@ def save_tiles(
             outds.write(geotiff.read(window=window))
     # Close the big raster now that we are done with it.
     # geotiff.close()
+
+
+def get_tiles_list_from_dir(tiles_dir: str):
+    """Get a list of tiles from a directory.
+
+    Args:
+        tiles_dir (str): Path to tiles directory.
+
+    Returns:
+        tiles (list): List of rasterio raster objects.
+    """
+
+    tiles = []
+    for tile in os.listdir(tiles_dir):
+        tile_path = os.path.join(tiles_dir, tile)
+        tiles.append(tile_path)
+    return tiles
+
+
+def load_tiles_from_list(tiles_list: list):
+    """Load tiles from a list.
+
+    Args:
+        tiles_list (list): List of rasterio raster objects.
+
+    Returns:
+        tiles (list): List of rasterio raster objects.
+    """
+
+    tiles = []
+    for tile in tiles_list:
+        with rio.open(tile) as geotiff:
+            tiles.append(geotiff)
+    return tiles
+
+
+def load_tiles_from_dir(tiles_dir: str):
+    """Load tiles from a directory.
+
+    Args:
+        tiles_dir (str): Path to tiles directory.
+
+    Returns:
+        tiles (list): List of rasterio raster objects.
+    """
+
+    tiles = []
+    for tile in os.listdir(tiles_dir):
+        tile_path = os.path.join(tiles_dir, tile)
+        with rio.open(tile_path) as geotiff:
+            tiles.append(geotiff)
+    return tiles

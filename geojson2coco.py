@@ -73,25 +73,24 @@ def main(args=None):
     )
     ap.add_argument(
         "--cleanup",
-        default=False,
-        type=bool,
-        help="If set to true, will purge *.tif tiles from the directory. Default to false.",
+        action=argparse.BooleanOptionalAction,
+        help="If set, will purge *.tif tiles from the directory. Default to false.",
     )
     ap.add_argument(
         "--save-gdf",
         default=True,
-        type=bool,
-        help="If set to true, will save a GeoDataFrame that you can use to reconstruct a spatial version of the dataset.",
+        action=argparse.BooleanOptionalAction,
+        help="If set, will save a GeoDataFrame that you can use to reconstruct a spatial version of the dataset.",
     )
     ap.add_argument(
         "--short-file-name",
-        type=bool,
-        help="If True, saves a short file name in the COCO for images.",
+        action=argparse.BooleanOptionalAction,
+        help="If set, saves a short file name in the COCO for images.",
     )
     ap.add_argument(
-        "--colour",
-        type=bool,
-        help="If True, PNG images will be saved as colour images.",
+        "--grayscale",
+        action=argparse.BooleanOptionalAction,
+        help="If set, will generate grayscale images.",
     )
     ap.add_argument(
         "--license",
@@ -131,7 +130,7 @@ def main(args=None):
     license = args.license
     info = args.info
     json_name = args.json_name
-    colour = args.colour
+    colour = not args.grayscale
 
     log.info(f"Creating {tile_size} m*m tiles from {raster_path}")
 

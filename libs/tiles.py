@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""A collectio of functions for manipulating raster tiles."""
+
 import glob
 import itertools
 import logging
@@ -6,10 +8,6 @@ import os
 
 import rasterio as rio
 import rasterio.windows as riow
-
-# ==================================================================================================
-# Functions for creating tiles from raster files
-# ==================================================================================================
 
 log = logging.getLogger(__name__)
 

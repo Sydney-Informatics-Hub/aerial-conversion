@@ -100,6 +100,7 @@ def raster_to_coco(
         raster_path (str): Path to raster
         index (int): Index of raster
         extension (str, optional): Extension of image. Defaults to "png".
+        bands (int): The number of bands to save. Default is 3 (for R-G-B).
         colour (bool, optional): If True, save image in colour. Defaults to True.
 
     Returns:

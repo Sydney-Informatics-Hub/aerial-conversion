@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import glob
 import itertools
 import logging
 import os
@@ -114,21 +115,19 @@ def save_tiles(
     # geotiff.close()
 
 
-def get_tiles_list_from_dir(tiles_dir: str):
+def get_tiles_list_from_dir(tiles_dir: str, extension: str = "tif"):
     """Get a list of tiles from a directory.
 
     Args:
         tiles_dir (str): Path to tiles directory.
+        extension (str, optional): Extension of tiles. Defaults to "tif".
 
     Returns:
-        tiles (list): List of rasterio raster objects.
+        tiles_list (list): List of tiles.
     """
 
-    tiles = []
-    for tile in os.listdir(tiles_dir):
-        tile_path = os.path.join(tiles_dir, tile)
-        tiles.append(tile_path)
-    return tiles
+    tiles_list = glob.glob(os.path.join(tiles_dir, "*." + extension))
+    return tiles_list
 
 
 def load_tiles_from_list(tiles_list: list):
@@ -148,7 +147,7 @@ def load_tiles_from_list(tiles_list: list):
     return tiles
 
 
-def load_tiles_from_dir(tiles_dir: str):
+def load_tiles_from_dir(tiles_dir: str, extension: str = "tif"):
     """Load tiles from a directory.
 
     Args:
@@ -157,10 +156,9 @@ def load_tiles_from_dir(tiles_dir: str):
     Returns:
         tiles (list): List of rasterio raster objects.
     """
-
+    tile_list = get_tiles_list_from_dir(tiles_dir, extension)
     tiles = []
-    for tile in os.listdir(tiles_dir):
-        tile_path = os.path.join(tiles_dir, tile)
-        with rio.open(tile_path) as geotiff:
+    for tile in tile_list:
+        with rio.open(tile) as geotiff:
             tiles.append(geotiff)
     return tiles

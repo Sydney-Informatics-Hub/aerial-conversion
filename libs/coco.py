@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""A collectio of functions and structures for reading, writing, and creating
+coco annotations."""
+
 import json
 import logging
 import os

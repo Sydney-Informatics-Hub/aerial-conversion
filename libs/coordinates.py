@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
+"""A collection of functions for converting between spatial and pixel
+coordinates.
+
+This module contains functions for converting between spatial and pixel coordinates, as well as functions for creating
+pixel polygons for a list of raster tiles. The pixel polygons are used to create COCO annotations for each polygon.
+
+Also contains functions for creating polygons from coco annotations.
+"""
+
 import logging
 
-# import os
 import fiona
 import geopandas as gpd
 import pandas as pd
 import rasterio as rio
 from shapely.geometry import MultiPoint, box
 from tqdm import tqdm
-
-# ==================================================================================================
-# Functions for converting between spatial and pixel coordinates
-# ==================================================================================================
 
 log = logging.getLogger(__name__)
 

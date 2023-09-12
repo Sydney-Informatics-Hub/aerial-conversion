@@ -58,19 +58,19 @@ def reproject_coords(src_crs, dst_crs, coords):
     return [[x, y] for x, y in zip(xs, ys)]
 
 
-def pixel_to_spatial_rio(raster, x, y):
+def pixel_to_spatial_rio(raster, row_ind, col_ind):
     """Converts pixel coordinates to spatial coordinates using rasterio.
         More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python
     Args:
         raster (rio.DatasetReader): Rasterio raster object
-        x (int): x coordinate in pixels
-        y (int): y coordinate in pixels
+        row_ind (int): pixel row
+        col_ind (int): pixel column
 
     Returns:
         tuple: (x,y) spatial coordinates
     """
 
-    return raster.xy(x, y)  # px, py
+    return raster.xy(row_ind, col_ind)  # px, py
 
 
 def spatial_to_pixel_rio(raster, x, y):

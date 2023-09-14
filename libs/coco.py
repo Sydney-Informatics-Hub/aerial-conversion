@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-"""A collectio of functions and structures for reading, writing, and creating
-coco annotations."""
-
 import json
 import logging
 import os
@@ -10,6 +7,9 @@ import geopandas as gpd
 import pandas as pd
 import rasterio as rio
 from shapely.geometry import Polygon
+
+"""A collectio of functions and structures for reading, writing, and creating
+coco annotations."""
 
 log = logging.getLogger(__name__)
 
@@ -239,3 +239,101 @@ def coco_image_annotations(raster_file_list, colour):
     ]
 
     return images
+
+
+def coco_reader(coco_json: str):
+    """Function to read a COCO JSON file.
+
+    Args:
+        coco_json (str): Path to COCO JSON file
+
+    Returns:
+        coco (dict): COCO JSON file as a dict
+    """
+
+    with open(coco_json, "r") as f:
+        coco = json.load(f)
+
+    return coco
+
+
+def coco_annotation_per_image(coco_json: str, tile_search_margin: int = 10):
+    """Function to get a list of annotations per image. This function is
+    necessary in order to get the tile name from the COCO JSON file, as a
+    reference for spatial coordinate conversion.
+
+    Args:
+        coco_json (str): Path to COCO JSON file
+        tile_search_margin (int, optional): Percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10.
+
+    Returns:
+            annotations_per_image (list): List of annotations per image
+    """
+    coco_data = coco_reader(coco_json)
+    annotations_per_image = {}
+    for image in coco_data["images"]:
+        image_id = image["id"]
+        image_annotations = []
+        margine_h = image["height"] * tile_search_margin / 100
+        margine_w = image["width"] * tile_search_margin / 100
+        margine_h_max = image["height"] - margine_h
+        margine_w_max = image["width"] - margine_w
+        for annotation in coco_data["annotations"]:
+            if annotation["image_id"] == image_id:
+                marginal = False
+                x_min, y_min, x_max, y_max = annotation["bbox"]
+                x_max = x_max + x_min
+                y_max = y_max + y_min
+                if (
+                    x_min < margine_w
+                    or x_max > margine_w_max
+                    or y_min < margine_h
+                    or y_max > margine_h_max
+                ):
+                    marginal = True
+                annotation["marginal"] = marginal
+                image_annotations.append(annotation)
+        annotations_per_image[image_id] = {
+            "tile_name": image["file_name"].split(".")[0],
+            "annotations": image_annotations,
+        }
+    return annotations_per_image
+
+
+def coco_annotation_per_image_df(coco_json: str, tile_search_margin: int = 10):
+    """Function to get a list of annotations per image. This function is
+    necessary in order to get the tile name from the COCO JSON file, as a
+    reference for spatial coordinate conversion.
+
+    Args:
+        coco_json (str): Path to COCO JSON file
+        tile_search_margin (int, optional): Percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10.
+
+    Returns:
+            annotations_per_image (pd.DataFrame): Data frame of annotations with images image
+    """
+    coco_images_df = pd.DataFrame(
+        coco_annotation_per_image(coco_json, tile_search_margin)
+    ).T
+    coco_images_df = coco_images_df.explode("annotations").reset_index(drop=True)
+    return coco_images_df
+
+
+def coco_categories_dict(coco_json: str):
+    """Function to get a list of categories from a COCO JSON file.
+
+    Args:
+        coco_json (str): Path to COCO JSON file
+
+    Returns:
+            categories (list): List of categories
+    """
+    coco_data = coco_reader(coco_json)
+    categories = coco_data["categories"]
+    categories_dict = {}
+    for category in categories:
+        categories_dict[category["id"]] = {
+            "name": category["name"],
+            "supercategory": category["supercategory"],
+        }
+    return categories_dict

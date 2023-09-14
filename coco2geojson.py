@@ -3,19 +3,38 @@ import argparse
 
 # import glob
 import logging
+import os
+import warnings
 
-# import os
-# import os.path
 # import traceback
 from pathlib import Path
 
+import geopandas as gpd
+import pandas as pd
+from tqdm import tqdm
+
+from libs.coco import coco_annotation_per_image_df, coco_categories_dict
+from libs.coordinates import pixel_segmentation_to_spatial_rio, read_crs_from_raster
 from libs.tiles import get_tiles_list_from_dir, load_tiles_from_list
 
-# import geopandas as gpd
 # import rasterio as rio
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 log = logging.getLogger(__name__)
+
+
+def assemble_geo_json(
+    crs,
+    meta_name,
+    meta_type,
+    properties_json,
+    coordinates_z,
+    license_json,
+    info_json,
+    categories_json,
+):
+    pass
 
 
 #%% Command-line driver
@@ -30,13 +49,10 @@ def main(args=None):
         help="Path to the input tiles directory.",
     )
     ap.add_argument(
-        "--json-name",
+        "--coco-json",
         default="coco_from_gis.json",
         type=Path,
         help="Path to the input coco json file.",
-    )
-    ap.add_argument(
-        "--crs", type=str, default=None, help="Specifiy the project crs to use."
     )
     ap.add_argument("--tile-extension", default="tif", type=str)
     ap.add_argument(
@@ -47,7 +63,42 @@ def main(args=None):
         help="Path to output polygon file.",
     )
     ap.add_argument(
+        "--tile-search-margin",
+        default=10,
+        type=int,
+        help="Int percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10%.",
+    )
+    ap.add_argument(
+        "--keep-geom-type",
+        action=argparse.BooleanOptionalAction,
+        help="If set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries.",
+    )
+    ap.add_argument(
         "--raster-file", required=True, type=Path, help="Path to output raster file."
+    )
+    ap.add_argument(
+        "--meta-name",
+        type=str,
+        default="Aerial Segmentation Predictions",
+        description="Name of the prediction.",
+    )
+    ap.add_argument(
+        "--meta-type",
+        type=str,
+        default="FeatureCollection",
+        description="Type of the output geojson file.",
+    )
+    ap.add_argument(
+        "--properties-json",
+        type=Path,
+        default=None,
+        description="Path to a JSON file containing common properties to add to the geojson file for each annotation.",
+    )
+    ap.add_argument(
+        "--coordinates-z",
+        type=float,
+        default=None,
+        description="A common Z coordinate to use for all annotations. If not set, will not add Z coordinates.",
     )
     ap.add_argument(
         "--license",
@@ -59,28 +110,166 @@ def main(args=None):
     """
     Create tiles from raster and convert to COCO JSON format.
     """
-    # root_dir = "/home/sahand/Data/GIS2COCO/"
+    root_dir = "/home/sahand/Data/GIS2COCO/"
     # raster_path = os.path.join(root_dir, "chatswood/chatswood_hd.tif")
-    # geojson_path = os.path.join(root_dir, "chatswood/chatswood.geojson")
-    # tile_dir = os.path.join(root_dir, "chatswood/tiles/")
+    geojson_path = os.path.join(root_dir, "chatswood/coco_2_geojson_fix_01.geojson")
+    tile_dir = os.path.join(root_dir, "chatswood/big_tiles_200/")
+    # meta_name = "Aerial Segmentation Predictions"
+    # meta_type = "FeatureCollection"
+    tile_extension = "tif"
+    keep_geom_type = True
+    tile_search_margin = 5
     # user_crs = None
     # license = None
-    # json_name = os.path.join(root_dir, "chatswood/coco_from_gis.json")
+    coco_json_path = os.path.join(
+        root_dir, "chatswood/big_tiles_200/coco_from_gis_hd_200.json"
+    )
 
     # raster_path = args.raster_file
     # geojson_path = args.polygon_file
-    tile_dir = args.tile_dir
-    # user_crs = args.crs
+    # tile_dir = args.tile_dir
+    # meta_name = args.meta_name
     # license = args.license
-    # json_name = args.json_name
-    tile_extension = args.tile_extension
+    # coco_json_path = args.coco_json
+    # tile_extension = args.tile_extension
+    # keep_geom_type = args.keep_geom_type
+    # tile_search_margin = args.tile_search_margin
 
     # Read tiles
     log.info("Reading tiles from %s" % tile_dir)
-    tiles_list = get_tiles_list_from_dir(tiles_dir=tile_dir, extension=tile_extension)
-    rasters = load_tiles_from_list(tiles_list=tiles_list)
+    tiles_list = get_tiles_list_from_dir(tile_dir, tile_extension)
+    geotifs = load_tiles_from_list(tiles_list=tiles_list)
+    crs = read_crs_from_raster(tiles_list[0])
 
-    print(len(rasters))
+    # Read COCO JSON and extract annotations per reference image
+    tiles_df = pd.DataFrame(
+        zip(tiles_list, geotifs), columns=["raster_path", "geotiff"]
+    )
+    tiles_df["tile_name"] = tiles_df["raster_path"].apply(
+        lambda x: os.path.basename(x).split(".")[0]
+    )
+
+    coco_images_df = coco_annotation_per_image_df(coco_json_path, tile_search_margin)
+    coco_categories = coco_categories_dict(coco_json_path)
+    coco_images_df["annotations"][0]["bbox"]
+
+    # Merge COCO JSON with tiles
+    tiles_df = pd.merge(tiles_df, coco_images_df, on="tile_name", how="outer")
+
+    # Unpack annotations to segmentation column, yielding longer dataframe
+    tiles_df.dropna(subset=["annotations"], inplace=True)
+    tiles_df["segmentation"] = tiles_df["annotations"].apply(
+        lambda x: x["segmentation"]
+    )
+    tiles_df["bbox"] = tiles_df["annotations"].apply(lambda x: x["bbox"])
+    tiles_df["zone_code"] = tiles_df["annotations"].apply(lambda x: x["category_id"])
+    tiles_df["zone_name"] = tiles_df["zone_code"].apply(
+        lambda x: coco_categories[x]["name"]
+    )
+    tiles_df["marginal"] = tiles_df["annotations"].apply(lambda x: x["marginal"])
+    tiles_df = tiles_df.drop(columns=["annotations"])
+
+    # tiles_df[tiles_df["marginal"]==False]
+
+    # Group by zone ID, extract polygons, and merge overlapping polygons in the same zone
+    tiles_df_grouped = tiles_df.groupby(["zone_code"]).groups
+    tiles_df_zone_groups = list()
+    for zone in tiles_df_grouped:
+        tiles_df_zone_groups.append(tiles_df.loc[tiles_df_grouped[zone]])
+
+    # Create a list of GeoDataFrames, one per zone, after convering the pixel coordinates to raster coordinates
+    polygons_df_zone_groups = list()
+    for tiles_df_zone in tiles_df_zone_groups:
+        tiles_df_zone = tiles_df_zone.reset_index(drop=True)
+
+        # Convert segmentations to polygons
+        tiles_df_zone["geometry"] = tiles_df_zone.apply(
+            lambda x: pixel_segmentation_to_spatial_rio(
+                x["geotiff"], x["segmentation"]
+            ),
+            axis=1,
+        )
+
+        # Create a GeoDataFrame with the polygons
+        for i, row in tqdm(tiles_df_zone.iterrows(), total=tiles_df_zone.shape[0]):
+            polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[row["geometry"]])
+            # polygons_df_tmp["zone_code"] = row["zone_code"]
+            # polygons_df_tmp["zone_name"] = row["zone_name"]
+            # polygons_df_tmp["tile"] = row["tile_name"]
+            # polygons_df_tmp["type"] = "Feature"
+            if not polygons_df_tmp.empty:
+                if i == 0:
+                    polygons_df_zone = polygons_df_tmp.copy()
+                else:
+                    # Merge the GeoDataFrames and combine overlapping polygons
+                    if row["marginal"] is True:
+                        polygons_df_zone = gpd.overlay(
+                            polygons_df_zone,
+                            polygons_df_tmp,
+                            how="union",
+                            keep_geom_type=keep_geom_type,
+                        )  # .reset_index(drop=True)
+                        # TODO: Fix the following warning, or be careful abou the versions. (pandas==2.1.0, geopandas==0.13.2):
+                        # FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated.
+                        #   In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes.
+                        #   To retain the old behavior, exclude the relevant entries before the concat operation
+                    else:
+                        polygons_df_zone = pd.concat(
+                            [polygons_df_zone, polygons_df_tmp], ignore_index=True
+                        )
+
+            # print(polygons_df_zone)
+        polygons_df_zone["zone_code"] = row["zone_code"]
+        polygons_df_zone["zone_name"] = row["zone_name"]
+        polygons_df_zone_groups.append(polygons_df_zone)
+
+    polygons_df = pd.concat(polygons_df_zone_groups, ignore_index=True)
+
+    # Save to geojson
+    polygons_df.to_file(geojson_path, driver="GeoJSON")
+
+    # # Extract segmentations to a list per image (image is used as a reference for the coordinate system conversion)
+    # polygons_df_image = gpd.GeoDataFrame()
+
+    # for _,row in tqdm(tiles_df.iterrows(),total=tiles_df.shape[0]):
+    #     image_raster_path = row["raster_path"]
+    #     image_geotiff = row["geotiff"]
+    #     image_name = row["tile_name"]
+    #     image_annotations = row["annotations"]
+    #     for annotation in image_annotations:
+    #         segmentation = annotation["segmentation"]
+    #         # bbox = annotation["bbox"]
+    #         zone_code = annotation["category_id"]
+    #         zone_name = coco_categories[zone_code]["name"]
+
+    #         # Convert segmentation to geo polygon
+    #         polygon_geom = pixel_segmentation_to_spatial_rio(image_geotiff,segmentation)
+    #         polygon_df = gpd.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])
+    #         polygon_df["zone_code"] = zone_code
+    #         polygon_df["zone_name"] = zone_name
+    #         # polygon_df["type"] = "Feature"
+
+    #         polygons_df = pd.concat([polygons_df,polygon_df],ignore_index=True)
+
+    # polygons_df_grouped = polygons_df.groupby(["zone_code"]).groups
+    # polygons_df_zone_groups = list()
+    # for zone in polygons_df_grouped:
+    #     polygons_df_zone_groups.append(polygons_df.loc[polygons_df_grouped[zone]])
+
+    # # Find intersecting polygons with the same zone code and combine them using gpd.Overlay
+
+    # zone_combined_dfs = list()
+    # for polygons_df_zone in tqdm(polygons_df_zone_groups):
+    #     polygons_df_zone = polygons_df_zone.reset_index(drop=True)
+    #     polygons_df_combined = gpd.GeoDataFrame(crs=crs, geometry=polygons_df_zone.iloc[0:1]["geometry"])
+    #     for _,row in polygons_df_zone.iterrows():
+    #         polygons_df_combined = gpd.overlay(polygons_df_combined, gpd.GeoDataFrame(crs=crs,geometry=row["geometry"]), how='union')
+    #     zone_combined_dfs.append(polygons_df_combined)
+
+    # geojson.columns
+
+    # polygons_df.sample(15)
+    # print(len(geotifs))
 
 
 if __name__ == "__main__":

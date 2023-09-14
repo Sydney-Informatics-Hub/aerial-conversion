@@ -144,8 +144,8 @@ def raster_to_coco(
     image = coco_json.coco_image()
     image.license = 1
     image.file_name = os.path.basename(image_name)
-    image.height = raster.shape[0]
-    image.width = raster.shape[1]
+    image.height = geotiff.shape[0]
+    image.width = geotiff.shape[1]
     image.id = index
 
     return image

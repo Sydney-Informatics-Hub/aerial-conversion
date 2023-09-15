@@ -105,12 +105,12 @@ def pixel_segmentation_to_spatial_rio(geotiff, segmentation):
     """
     converted_coords = []
     segmentation = [
-        (segmentation[i], segmentation[i + 1]) for i in range(0, len(segmentation), 2)
+        (segmentation[i + 1], segmentation[i]) for i in range(0, len(segmentation), 2)
     ]
     for point in segmentation:
         log.debug(f"Converting {point} to spatial coordinates in raster {geotiff}")
         x, y = pixel_to_spatial_rio(geotiff, point[0], point[1])
-        spatial_point = [y, x]
+        spatial_point = [x, y]
         converted_coords.append(spatial_point)
 
     polygon = Polygon(converted_coords)

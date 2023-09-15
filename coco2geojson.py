@@ -44,61 +44,64 @@ def main(args=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--tile-dir",
-        required=True,
+        # required=True,
         type=Path,
+        default="/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200/",
         help="Path to the input tiles directory.",
     )
     ap.add_argument(
         "--coco-json",
-        default="coco_from_gis.json",
+        default="/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200/coco_from_gis_hd_200.json",
         type=Path,
         help="Path to the input coco json file.",
     )
-    ap.add_argument("--tile-extension", default="tif", type=str)
     ap.add_argument(
-        "--polygon-file",
-        required=True,
-        default=".",
+        "--tile-extension",
+        default="tif",
+        type=str,
+        help="Extension of tiles. Defaults to 'tif'.",
+    )
+    ap.add_argument(
+        "--geojson-output",
+        # required=True,
+        default="/home/sahand/Data/GIS2COCO/chatswood/coco_2_geojson.geojson",
         type=Path,
-        help="Path to output polygon file.",
+        help="Path to output geojson file.",
     )
     ap.add_argument(
         "--tile-search-margin",
-        default=10,
+        default=5,
         type=int,
         help="Int percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10%.",
     )
     ap.add_argument(
-        "--keep-geom-type",
+        "--not-keep-geom-type",
         action=argparse.BooleanOptionalAction,
-        help="If set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries.",
-    )
-    ap.add_argument(
-        "--raster-file", required=True, type=Path, help="Path to output raster file."
+        help="If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.",
     )
     ap.add_argument(
         "--meta-name",
         type=str,
         default="Aerial Segmentation Predictions",
-        description="Name of the prediction.",
+        help="Name of the prediction.",
     )
     ap.add_argument(
         "--meta-type",
         type=str,
         default="FeatureCollection",
-        description="Type of the output geojson file.",
+        help="Type of the output geojson file.",
     )
     ap.add_argument(
         "--properties-json",
         type=Path,
         default=None,
-        description="Path to a JSON file containing common properties to add to the geojson file for each annotation.",
+        help="Path to a JSON file containing common properties to add to the geojson file for each annotation.",
     )
     ap.add_argument(
         "--coordinates-z",
         type=float,
         default=None,
-        description="A common Z coordinate to use for all annotations. If not set, will not add Z coordinates.",
+        help="A common Z coordinate to use for all annotations. If not set, will not add Z coordinates.",
     )
     ap.add_argument(
         "--license",
@@ -110,30 +113,13 @@ def main(args=None):
     """
     Create tiles from raster and convert to COCO JSON format.
     """
-    root_dir = "/home/sahand/Data/GIS2COCO/"
-    # raster_path = os.path.join(root_dir, "chatswood/chatswood_hd.tif")
-    geojson_path = os.path.join(root_dir, "chatswood/coco_2_geojson_fix_01.geojson")
-    tile_dir = os.path.join(root_dir, "chatswood/big_tiles_200/")
-    # meta_name = "Aerial Segmentation Predictions"
-    # meta_type = "FeatureCollection"
-    tile_extension = "tif"
-    keep_geom_type = True
-    tile_search_margin = 5
-    # user_crs = None
-    # license = None
-    coco_json_path = os.path.join(
-        root_dir, "chatswood/big_tiles_200/coco_from_gis_hd_200.json"
-    )
-
-    # raster_path = args.raster_file
-    # geojson_path = args.polygon_file
-    # tile_dir = args.tile_dir
-    # meta_name = args.meta_name
-    # license = args.license
-    # coco_json_path = args.coco_json
-    # tile_extension = args.tile_extension
-    # keep_geom_type = args.keep_geom_type
-    # tile_search_margin = args.tile_search_margin
+    geojson_path = args.geojson_output
+    tile_dir = args.tile_dir
+    meta_name = args.meta_name
+    coco_json_path = args.coco_json
+    tile_extension = args.tile_extension
+    keep_geom_type = not args.not_keep_geom_type  # should be True
+    tile_search_margin = args.tile_search_margin
 
     # Read tiles
     log.info("Reading tiles from %s" % tile_dir)
@@ -224,52 +210,13 @@ def main(args=None):
         polygons_df_zone_groups.append(polygons_df_zone)
 
     polygons_df = pd.concat(polygons_df_zone_groups, ignore_index=True)
-
+    try:
+        polygons_df.Name = meta_name
+    except Exception as e:
+        log.error(f"Could not set Name property of geojson. Error message: {e}")
+        print("FIX this code!")
     # Save to geojson
     polygons_df.to_file(geojson_path, driver="GeoJSON")
-
-    # # Extract segmentations to a list per image (image is used as a reference for the coordinate system conversion)
-    # polygons_df_image = gpd.GeoDataFrame()
-
-    # for _,row in tqdm(tiles_df.iterrows(),total=tiles_df.shape[0]):
-    #     image_raster_path = row["raster_path"]
-    #     image_geotiff = row["geotiff"]
-    #     image_name = row["tile_name"]
-    #     image_annotations = row["annotations"]
-    #     for annotation in image_annotations:
-    #         segmentation = annotation["segmentation"]
-    #         # bbox = annotation["bbox"]
-    #         zone_code = annotation["category_id"]
-    #         zone_name = coco_categories[zone_code]["name"]
-
-    #         # Convert segmentation to geo polygon
-    #         polygon_geom = pixel_segmentation_to_spatial_rio(image_geotiff,segmentation)
-    #         polygon_df = gpd.GeoDataFrame(index=[0], crs=crs, geometry=[polygon_geom])
-    #         polygon_df["zone_code"] = zone_code
-    #         polygon_df["zone_name"] = zone_name
-    #         # polygon_df["type"] = "Feature"
-
-    #         polygons_df = pd.concat([polygons_df,polygon_df],ignore_index=True)
-
-    # polygons_df_grouped = polygons_df.groupby(["zone_code"]).groups
-    # polygons_df_zone_groups = list()
-    # for zone in polygons_df_grouped:
-    #     polygons_df_zone_groups.append(polygons_df.loc[polygons_df_grouped[zone]])
-
-    # # Find intersecting polygons with the same zone code and combine them using gpd.Overlay
-
-    # zone_combined_dfs = list()
-    # for polygons_df_zone in tqdm(polygons_df_zone_groups):
-    #     polygons_df_zone = polygons_df_zone.reset_index(drop=True)
-    #     polygons_df_combined = gpd.GeoDataFrame(crs=crs, geometry=polygons_df_zone.iloc[0:1]["geometry"])
-    #     for _,row in polygons_df_zone.iterrows():
-    #         polygons_df_combined = gpd.overlay(polygons_df_combined, gpd.GeoDataFrame(crs=crs,geometry=row["geometry"]), how='union')
-    #     zone_combined_dfs.append(polygons_df_combined)
-
-    # geojson.columns
-
-    # polygons_df.sample(15)
-    # print(len(geotifs))
 
 
 if __name__ == "__main__":

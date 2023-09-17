@@ -236,8 +236,8 @@ def coco_image_annotations(raster_file_list, colour):
 
     images = coco_json.coco_images()
     images.images = [
-        raster_to_coco(raster_file, ind, "png", 3, colour)
-        for ind, raster_file in enumerate(raster_file_list)
+        raster_to_coco(raster_file, index, "png", 3, colour)
+        for index, raster_file in enumerate(raster_file_list)
     ]
 
     return images

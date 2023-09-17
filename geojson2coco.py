@@ -93,6 +93,12 @@ def main(args=None):
         help="If set, will generate grayscale images.",
     )
     ap.add_argument(
+        "--offset",
+        default=0.0,
+        type=float,
+        help="Padding/offset/overlap in percentage of tile. Defaults to 0.0.",
+    )
+    ap.add_argument(
         "--license",
         type=Path,
         help="Path to a license description in COCO JSON format. If not supplied, will default to MIT license.",
@@ -119,6 +125,8 @@ def main(args=None):
     # license = None
     # info = os.path.join(root_dir, "chatswood/info.json")
     # json_name = os.path.join(root_dir, "chatswood/coco_from_gis.json")
+    # colour = True
+    # offset = 0.0
 
     raster_path = args.raster_file
     geojson_path = args.polygon_file
@@ -131,6 +139,7 @@ def main(args=None):
     info = args.info
     json_name = args.json_name
     colour = not args.grayscale
+    offset = args.offset
 
     log.info(f"Creating {tile_size} m*m tiles from {raster_path}")
 
@@ -151,7 +160,9 @@ def main(args=None):
         raise e
 
     # Create raster tiles
-    save_tiles(geotiff, out_path, tile_size, tile_template="tile_{}-{}.tif")
+    save_tiles(
+        geotiff, out_path, tile_size, tile_template="tile_{}-{}.tif", offset=offset
+    )
     geotiff.close()
 
     # Read the created raster tiles into a list.

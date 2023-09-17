@@ -182,7 +182,6 @@ def main(args=None):
             # polygons_df_tmp["zone_code"] = row["zone_code"]
             # polygons_df_tmp["zone_name"] = row["zone_name"]
             # polygons_df_tmp["tile"] = row["tile_name"]
-            # polygons_df_tmp["type"] = "Feature"
             if not polygons_df_tmp.empty:
                 if i == 0:
                     polygons_df_zone = polygons_df_tmp.copy()

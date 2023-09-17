@@ -232,6 +232,8 @@ def coco_image_annotations(raster_file_list, colour):
         images (coco_images): coco_images object
     """
 
+    # TODO: Make this function more efficcient by parllizing it. Multiple instances of raster_to_coco can be run in parallel.
+
     images = coco_json.coco_images()
     images.images = [
         raster_to_coco(raster_file, ind, "png", 3, colour)

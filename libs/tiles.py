@@ -29,7 +29,7 @@ def get_tiles(
         tile_width (int, optional): Width of tile. Defaults to 2000.
         tile_height (int, optional): Height of tile. Defaults to 2000.
         map_units (bool, optional): If True, tile_width and tile_height are in map units. Defaults to False.
-        offset (float, optional): Offset in percentage of tile. Defaults to 0.0.
+        offset (float, optional): Padding/offset/overlap in percentage of tile. Defaults to 0.0.
 
     Yields:
         window (rio.windows.Window): Rasterio window object
@@ -54,21 +54,47 @@ def get_tiles(
     )  # Not actual offsets, but just a grid of cells
     big_window = riow.Window(col_off=0, row_off=0, width=ncols, height=nrows)
 
-    if offset > 0:
-        log.error("NotImplementedError: Offset not implemented yet.")
-        raise NotImplementedError("Offset not implemented yet.")
-        offset = int(tile_width * offset)
-        corners = itertools.product(
-            range(offset, ncols, tile_width), range(offset, nrows, tile_height)
-        )
-        big_window = riow.Window(
-            col_off=offset, row_off=offset, width=ncols - offset, height=nrows - offset
-        )
+    # if offset > 0:
+    # log.error("NotImplementedError: Offset not implemented yet.")
+    # raise NotImplementedError("Offset not implemented yet.")
+    offset_w = int(tile_width * offset / 100)
+    offset_h = int(tile_height * offset / 100)
+    # corners = itertools.product(
+    #     range(offset, ncols, tile_width), range(offset, nrows, tile_height)
+    # )
+    # big_window = riow.Window(
+    #     col_off=offset, row_off=offset, width=ncols - offset, height=nrows - offset
+    # )
+
+    TILE_WIDTH = min(tile_width + (offset_w * 2), ncols)
+    TILE_HEIGHT = min(tile_height + (offset_h * 2), nrows)
+
+    print(f"new tile_width: {tile_width}, tile_height: {tile_height}")
 
     for col_corner, row_corner in corners:
+
+        # window = riow.Window(
+        #     col_off=col_corner, row_off=row_corner, width=tile_width, height=tile_height
+        # ).intersection(big_window)
+        # print(f"\n\ncol_corner: {col_corner}, row_corner: {row_corner}")
+        # print(f"col_corner-offset_w: {col_corner-offset_w}, row_corner-offset_h: {row_corner-offset_h}")
+        if col_corner == 0:
+            tile_width = min(TILE_WIDTH + offset_w, ncols)
+        else:
+            tile_width = min(TILE_WIDTH + (offset_w * 2), ncols)
+
+        if row_corner == 0:
+            tile_height = min(TILE_HEIGHT + offset_h, nrows)
+        else:
+            tile_height = min(TILE_HEIGHT + (offset_h * 2), nrows)
+
         window = riow.Window(
-            col_off=col_corner, row_off=row_corner, width=tile_width, height=tile_height
+            col_off=max(0, col_corner - offset_w),
+            row_off=max(0, row_corner - offset_h),
+            width=tile_width,
+            height=tile_height,
         ).intersection(big_window)
+
         transform = riow.transform(window, geotiff.transform)
         yield window, transform
 
@@ -78,6 +104,7 @@ def save_tiles(
     out_path: str,
     tile_size: int = 2000,
     tile_template: str = "tile_{}-{}.tif",
+    offset: float = 0.0,
 ):
     """Save tiles from a raster file.
 
@@ -86,6 +113,7 @@ def save_tiles(
         out_path (str): Path to save tiles to.
         tile_size (int): Size of tiles.
         tile_template (str): Template for tile names. Should contain two {} placeholders for the x and y coordinates of the tile.
+        offset (float, optional): Padding/offset/overlap in percentage of tile. Defaults to 0.0.
 
     Returns:
         None
@@ -101,7 +129,7 @@ def save_tiles(
     tile_width, tile_height = tile_size, tile_size
     meta = geotiff.meta.copy()
     for window, transform in get_tiles(
-        geotiff, tile_width, tile_height, map_units=True
+        geotiff, tile_width, tile_height, map_units=True, offset=offset
     ):
         meta["transform"] = transform
         meta["width"], meta["height"] = window.width, window.height

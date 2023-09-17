@@ -21,7 +21,7 @@ Also contains functions for creating polygons from coco annotations.
 log = logging.getLogger(__name__)
 
 
-def wkt_parser(wkt_str: str):
+def wkt_parser(wkt_str: str, wkt_keyword="LOCAL_CS["):
     """Parses a WKT string to extract the local coordinate system.
 
     Args:
@@ -33,15 +33,8 @@ def wkt_parser(wkt_str: str):
     # TODO: Make this tool smarter. Right now it just looks for the first LOCAL_CS[ and returns everything after that.
 
     wkt = wkt_str.split('"')
-    set = False
-    for x in wkt:
-        if set is True:
-            log.debug(f"LOCAL_CS is {x}")
-            return x
-        if x == "LOCAL_CS[":
-            log.debug(f"Found LOCAL_CS[ at {wkt.index(x)}")
-            set = True
-    log.info(f"wtkt_str: {wkt_str}")
+    if wkt_keyword in wkt:
+        return wkt[wkt.index(wkt_keyword) + 1]
     return wkt_str
 
 
@@ -78,19 +71,19 @@ def reproject_coords(src_crs, dst_crs, coords):
     return [[x, y] for x, y in zip(xs, ys)]
 
 
-def pixel_to_spatial_rio(geotiff, row_ind, col_ind):
+def pixel_to_spatial_rio(geotiff, row_index, col_index):
     """Converts pixel coordinates to spatial coordinates using rasterio.
         More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python
     Args:
         geotiff (rio.DatasetReader): Rasterio raster object (do not read, just open via rasterio.open(raster_path))
-        row_ind (int): pixel row
-        col_ind (int): pixel column
+        row_index (int): pixel row
+        col_index (int): pixel column
 
     Returns:
         tuple: (x,y) spatial coordinates
     """
 
-    return geotiff.xy(row_ind, col_ind)  # px, py
+    return geotiff.xy(row_index, col_index)  # px, py
 
 
 def pixel_segmentation_to_spatial_rio(geotiff, segmentation):
@@ -146,11 +139,11 @@ def spatial_to_pixel_rio(geotiff, x, y):
         y (float): latitudinal coordinate in spatial units
 
     Returns:
-        tuple: (row_ind,col_ind) pixel coordinates
+        tuple: (row_index,col_index) pixel coordinates
     """
 
-    row_ind, col_ind = geotiff.index(x, y)  # lon,lat
-    return row_ind, col_ind
+    row_index, col_index = geotiff.index(x, y)  # lon,lat
+    return row_index, col_index
 
 
 def spatial_polygon_to_pixel_rio(geotiff, polygon) -> list:

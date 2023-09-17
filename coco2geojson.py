@@ -111,7 +111,7 @@ def main(args=None):
     args = ap.parse_args(args)
 
     """
-    Create tiles from raster and convert to COCO JSON format.
+    Read tiles and COCO JSON, and convert to GeoJSON.
     """
     geojson_path = args.geojson_output
     tile_dir = args.tile_dir

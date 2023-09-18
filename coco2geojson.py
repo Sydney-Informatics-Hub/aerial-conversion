@@ -5,12 +5,14 @@ import argparse
 import logging
 import os
 import warnings
+from datetime import datetime
 
 # import traceback
 from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
+from shapely.ops import unary_union
 from tqdm import tqdm
 
 from libs.coco import coco_annotation_per_image_df, coco_categories_dict
@@ -24,34 +26,135 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 log = logging.getLogger(__name__)
 
 
-def assemble_geo_json(
-    crs,
-    meta_name,
-    meta_type,
-    properties_json,
-    coordinates_z,
-    license_json,
-    info_json,
-    categories_json,
-):
-    pass
+def merge_class_polygons_geopandas(tiles_df_zone_groups, crs, keep_geom_type):
+    """Merge overlapping polygons in each class/zone.
+
+    This method uses geopandas overlay to merge overlapping polygons in each class/zone.
+
+    Args:
+        tiles_df_zone_groups (list): List of GeoDataFrames, one per zone (building/annotation typle/class)
+        crs (str): Coordinate system
+        keep_geom_type (bool): If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.
+
+    Returns:
+        polygons_df (GeoDataFrame): GeoDataFrame of merged polygons
+    """
+    # Create a list of GeoDataFrames, one per zone (building/annotation typle/class)
+    polygons_df_zone_groups = list()
+    for tiles_df_zone in tiles_df_zone_groups:
+        tiles_df_zone = tiles_df_zone.reset_index(drop=True)
+
+        # Convert segmentations to polygons
+        tiles_df_zone["geometry"] = tiles_df_zone.apply(
+            lambda x: pixel_segmentation_to_spatial_rio(
+                x["geotiff"], x["segmentation"]
+            ),
+            axis=1,
+        )
+
+        for i, row in tqdm(tiles_df_zone.iterrows(), total=tiles_df_zone.shape[0]):
+            # Create a GeoDataFrame with the polygons
+            polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[row["geometry"]])
+            # polygons_df_tmp["zone_code"] = row["zone_code"]
+            # polygons_df_tmp["zone_name"] = row["zone_name"]
+            # polygons_df_tmp["tile"] = row["tile_name"]
+            if not polygons_df_tmp.empty:
+                if i == 0:
+                    polygons_df_zone = polygons_df_tmp.copy()
+                else:
+                    # Merge the GeoDataFrames and combine overlapping polygons
+                    if row["marginal"] is True:
+                        polygons_df_zone = gpd.overlay(
+                            polygons_df_zone,
+                            polygons_df_tmp,
+                            how="union",
+                            keep_geom_type=keep_geom_type,
+                        )  # .reset_index(drop=True)
+                        # TODO: Fix the following warning, or be careful abou the versions. (pandas==2.1.0, geopandas==0.13.2):
+                        # FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated.
+                        #   In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes.
+                        #   To retain the old behavior, exclude the relevant entries before the concat operation
+                    else:
+                        polygons_df_zone = pd.concat(
+                            [polygons_df_zone, polygons_df_tmp], ignore_index=True
+                        )
+
+            # print(polygons_df_zone)
+        polygons_df_zone["zone_code"] = row["zone_code"]
+        polygons_df_zone["zone_name"] = row["zone_name"]
+        polygons_df_zone_groups.append(polygons_df_zone)
+
+    polygons_df = pd.concat(polygons_df_zone_groups, ignore_index=True)
+    return polygons_df
+
+
+def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
+    """Merge overlapping polygons in each class/zone.
+
+    This method uses shapely unary_union to merge overlapping polygons in each class/zone.
+
+    Args:
+        tiles_df_zone_groups (list): List of GeoDataFrames, one per zone (building/annotation typle/class)
+        crs (str): Coordinate system
+
+    Returns:
+        polygons_df (GeoDataFrame): GeoDataFrame of merged polygons
+    """
+    # polygons_df_zone_groups = []
+    for index, tiles_df_zone in tqdm(
+        enumerate(tiles_df_zone_groups), total=len(tiles_df_zone_groups)
+    ):
+        tiles_df_zone = tiles_df_zone.reset_index(drop=True)
+
+        # Convert segmentations to polygons
+        tiles_df_zone["geometry"] = tiles_df_zone.apply(
+            lambda x: pixel_segmentation_to_spatial_rio(
+                x["geotiff"], x["segmentation"]
+            ),
+            axis=1,
+        )
+
+        # Merge overlapping polygons in each class/zone
+        zone_name = tiles_df_zone["zone_name"][0]
+        zone_code = tiles_df_zone["zone_code"][0]
+        multipolygon = unary_union(tiles_df_zone["geometry"])
+        # polygons = list(multipolygon.geoms)
+
+        if index == 0:
+            polygons_df = gpd.GeoDataFrame(crs=crs, geometry=[multipolygon])
+            polygons_df["zone_code"] = zone_code
+            polygons_df["zone_name"] = zone_name
+        else:
+            polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[multipolygon])
+            polygons_df_tmp["zone_code"] = zone_code
+            polygons_df_tmp["zone_name"] = zone_name
+            polygons_df = pd.concat([polygons_df, polygons_df_tmp], ignore_index=True)
+    polygons_df = polygons_df.explode("geometry").reset_index(drop=True)
+
+    # for poly in tqdm(polygons[1:]):
+    #     polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[poly])
+    #     polygons_df_tmp["zone_code"] = zone_code
+    #     polygons_df_tmp["zone_name"] = zone_name
+    #     polygons_df = pd.concat([polygons_df, polygons_df_tmp], ignore_index=True)
+    return polygons_df
 
 
 #%% Command-line driver
 
 
 def main(args=None):
+    test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--tile-dir",
         # required=True,
         type=Path,
-        default="/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200/",
+        default=test_data_path,
         help="Path to the input tiles directory.",
     )
     ap.add_argument(
         "--coco-json",
-        default="/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200/coco_from_gis_hd_200.json",
+        default=os.path.join(test_data_path, "coco_from_gis_hd_200.json"),
         type=Path,
         help="Path to the input coco json file.",
     )
@@ -64,7 +167,10 @@ def main(args=None):
     ap.add_argument(
         "--geojson-output",
         # required=True,
-        default="/home/sahand/Data/GIS2COCO/chatswood/coco_2_geojson.geojson",
+        default=os.path.join(
+            test_data_path,
+            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
+        ),
         type=Path,
         help="Path to output geojson file.",
     )
@@ -118,7 +224,9 @@ def main(args=None):
     meta_name = args.meta_name
     coco_json_path = args.coco_json
     tile_extension = args.tile_extension
-    keep_geom_type = not args.not_keep_geom_type  # should be True
+    # keep_geom_type = (
+    #     not args.not_keep_geom_type
+    # )  # should be True # only meaningful when using geopandas overlay method
     tile_search_margin = args.tile_search_margin
 
     # Read tiles
@@ -137,7 +245,7 @@ def main(args=None):
 
     coco_images_df = coco_annotation_per_image_df(coco_json_path, tile_search_margin)
     coco_categories = coco_categories_dict(coco_json_path)
-    coco_images_df["annotations"][0]["bbox"]
+    # coco_images_df["annotations"][0]["bbox"]
 
     # Merge COCO JSON with tiles
     tiles_df = pd.merge(tiles_df, coco_images_df, on="tile_name", how="outer")
@@ -163,52 +271,9 @@ def main(args=None):
     for zone in tiles_df_grouped:
         tiles_df_zone_groups.append(tiles_df.loc[tiles_df_grouped[zone]])
 
-    # Create a list of GeoDataFrames, one per zone, after convering the pixel coordinates to raster coordinates
-    polygons_df_zone_groups = list()
-    for tiles_df_zone in tiles_df_zone_groups:
-        tiles_df_zone = tiles_df_zone.reset_index(drop=True)
+    polygons_df = merge_class_polygons_shapely(tiles_df_zone_groups, crs)
+    # polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow
 
-        # Convert segmentations to polygons
-        tiles_df_zone["geometry"] = tiles_df_zone.apply(
-            lambda x: pixel_segmentation_to_spatial_rio(
-                x["geotiff"], x["segmentation"]
-            ),
-            axis=1,
-        )
-
-        # Create a GeoDataFrame with the polygons
-        for i, row in tqdm(tiles_df_zone.iterrows(), total=tiles_df_zone.shape[0]):
-            polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[row["geometry"]])
-            # polygons_df_tmp["zone_code"] = row["zone_code"]
-            # polygons_df_tmp["zone_name"] = row["zone_name"]
-            # polygons_df_tmp["tile"] = row["tile_name"]
-            if not polygons_df_tmp.empty:
-                if i == 0:
-                    polygons_df_zone = polygons_df_tmp.copy()
-                else:
-                    # Merge the GeoDataFrames and combine overlapping polygons
-                    if row["marginal"] is True:
-                        polygons_df_zone = gpd.overlay(
-                            polygons_df_zone,
-                            polygons_df_tmp,
-                            how="union",
-                            keep_geom_type=keep_geom_type,
-                        )  # .reset_index(drop=True)
-                        # TODO: Fix the following warning, or be careful abou the versions. (pandas==2.1.0, geopandas==0.13.2):
-                        # FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated.
-                        #   In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes.
-                        #   To retain the old behavior, exclude the relevant entries before the concat operation
-                    else:
-                        polygons_df_zone = pd.concat(
-                            [polygons_df_zone, polygons_df_tmp], ignore_index=True
-                        )
-
-            # print(polygons_df_zone)
-        polygons_df_zone["zone_code"] = row["zone_code"]
-        polygons_df_zone["zone_name"] = row["zone_name"]
-        polygons_df_zone_groups.append(polygons_df_zone)
-
-    polygons_df = pd.concat(polygons_df_zone_groups, ignore_index=True)
     try:
         polygons_df.Name = meta_name
     except Exception as e:

@@ -259,14 +259,14 @@ def coco_reader(coco_json: str):
     return coco
 
 
-def coco_annotation_per_image(coco_json: str, tile_search_margin: int = 10):
+def coco_annotation_per_image(coco_json: str, tile_search_margin: int = 5):
     """Function to get a list of annotations per image. This function is
     necessary in order to get the tile name from the COCO JSON file, as a
     reference for spatial coordinate conversion.
 
     Args:
         coco_json (str): Path to COCO JSON file
-        tile_search_margin (int, optional): Percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10.
+        tile_search_margin (int, optional): Percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 5 percent.
 
     Returns:
             annotations_per_image (list): List of annotations per image
@@ -292,7 +292,8 @@ def coco_annotation_per_image(coco_json: str, tile_search_margin: int = 10):
                     or y_min < margine_h
                     or y_max > margine_h_max
                 ):
-                    marginal = True
+                    marginal = True  # print(f"new tile_width: {tile_width}, tile_height: {tile_height}")
+
                 annotation["marginal"] = marginal
                 image_annotations.append(annotation)
         annotations_per_image[image_id] = {

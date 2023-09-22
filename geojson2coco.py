@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def assemble_coco_json(
-    raster_file_list, geojson, license_json, info_json, categories_json
+    raster_file_list, geojson, license_json, info_json, categories_json, colour
 ):
 
     pixel_poly_df = pixel_polygons_for_raster_tiles(raster_file_list, geojson)
@@ -32,7 +32,7 @@ def assemble_coco_json(
     # pixel_poly_df_sample.to_csv(json_name[:-5]+".csv")
 
     coco = coco_json()
-    coco.images = coco_image_annotations(raster_file_list).images
+    coco.images = coco_image_annotations(raster_file_list, colour).images
     coco.annotations = coco_polygon_annotations(pixel_poly_df)
     coco.license = license_json
     coco.categories = categories_json
@@ -73,20 +73,30 @@ def main(args=None):
     )
     ap.add_argument(
         "--cleanup",
-        default=False,
-        type=bool,
-        help="If set to true, will purge *.tif tiles from the directory. Default to false.",
+        action=argparse.BooleanOptionalAction,
+        help="If set, will purge *.tif tiles from the directory. Default to false.",
     )
     ap.add_argument(
         "--save-gdf",
         default=True,
-        type=bool,
-        help="If set to true, will save a GeoDataFrame that you can use to reconstruct a spatial version of the dataset.",
+        action=argparse.BooleanOptionalAction,
+        help="If set, will save a GeoDataFrame that you can use to reconstruct a spatial version of the dataset.",
     )
     ap.add_argument(
         "--short-file-name",
-        type=bool,
-        help="If True, saves a short file name in the COCO for images.",
+        action=argparse.BooleanOptionalAction,
+        help="If set, saves a short file name in the COCO for images.",
+    )
+    ap.add_argument(
+        "--grayscale",
+        action=argparse.BooleanOptionalAction,
+        help="If set, will generate grayscale images.",
+    )
+    ap.add_argument(
+        "--offset",
+        default=0.0,
+        type=float,
+        help="Padding/offset/overlap in percentage of tile. Defaults to 0.0.",
     )
     ap.add_argument(
         "--license",
@@ -105,7 +115,7 @@ def main(args=None):
     Create tiles from raster and convert to COCO JSON format.
     """
     # root_dir = "/home/sahand/Data/GIS2COCO/"
-    # raster_path = os.path.join(root_dir, "chatswood/chatswood.tif")
+    # raster_path = os.path.join(root_dir, "chatswood/chatswood_hd.tif")
     # geojson_path = os.path.join(root_dir, "chatswood/chatswood.geojson")
     # out_path = os.path.join(root_dir, "chatswood/tiles/")
     # tile_size = 500
@@ -115,6 +125,8 @@ def main(args=None):
     # license = None
     # info = os.path.join(root_dir, "chatswood/info.json")
     # json_name = os.path.join(root_dir, "chatswood/coco_from_gis.json")
+    # colour = True
+    # offset = 0.0
 
     raster_path = args.raster_file
     geojson_path = args.polygon_file
@@ -126,6 +138,8 @@ def main(args=None):
     license = args.license
     info = args.info
     json_name = args.json_name
+    colour = not args.grayscale
+    offset = args.offset
 
     log.info(f"Creating {tile_size} m*m tiles from {raster_path}")
 
@@ -146,7 +160,9 @@ def main(args=None):
         raise e
 
     # Create raster tiles
-    save_tiles(geotiff, out_path, tile_size, tile_template="tile_{}-{}.tif")
+    save_tiles(
+        geotiff, out_path, tile_size, tile_template="tile_{}-{}.tif", offset=offset
+    )
     geotiff.close()
 
     # Read the created raster tiles into a list.
@@ -177,7 +193,7 @@ def main(args=None):
     log.info("Converting to COCO")
     # We are now ready to make the COCO JSON.
     spatial_coco = assemble_coco_json(
-        raster_file_list, geojson, license_json, info_json, categories_json
+        raster_file_list, geojson, license_json, info_json, categories_json, colour
     )
 
     # Write COCO JSON to file.
@@ -185,10 +201,8 @@ def main(args=None):
         f.write(spatial_coco.toJSON())
     log.info(f"COCO JSON saved to {json_name}")
 
-    # if args.save_gdf == True:
-
+    # if args.save_gdf:
     #     pixel_poly_df['raster_tile_name'] = pixel_poly_df.apply(lambda row: os.path.basename(row['raster_tile']), axis = 1)
-
     #     with open ("gdf_output.csv", "w") as f:
     #         f.write(pixel_poly_df)
 

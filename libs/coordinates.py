@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
 import logging
 
-# import os
 import fiona
 import geopandas as gpd
 import pandas as pd
 import rasterio as rio
-from shapely.geometry import MultiPoint, box
+from shapely.geometry import MultiPoint, Polygon, box
 from tqdm import tqdm
 
-# ==================================================================================================
-# Functions for converting between spatial and pixel coordinates
-# ==================================================================================================
+"""A collection of functions for converting between spatial and pixel
+coordinates.
+
+This module contains functions for converting between spatial and pixel coordinates, as well as functions for creating
+pixel polygons for a list of raster tiles. The pixel polygons are used to create COCO annotations for each polygon.
+
+Also contains functions for creating polygons from coco annotations.
+"""
+
 
 log = logging.getLogger(__name__)
 
 
-def wkt_parser(wkt_str: str):
+def wkt_parser(wkt_str: str, wkt_keyword="LOCAL_CS["):
     """Parses a WKT string to extract the local coordinate system.
 
     Args:
@@ -28,16 +33,24 @@ def wkt_parser(wkt_str: str):
     # TODO: Make this tool smarter. Right now it just looks for the first LOCAL_CS[ and returns everything after that.
 
     wkt = wkt_str.split('"')
-    set = False
-    for x in wkt:
-        if set is True:
-            log.debug(f"LOCAL_CS is {x}")
-            return x
-        if x == "LOCAL_CS[":
-            log.debug(f"Found LOCAL_CS[ at {wkt.index(x)}")
-            set = True
-    log.info(f"wtkt_str: {wkt_str}")
+    if wkt_keyword in wkt:
+        return wkt[wkt.index(wkt_keyword) + 1]
     return wkt_str
+
+
+def read_crs_from_raster(raster_file: str):
+    """Reads the coordinate system from a raster file.
+
+    Args:
+        raster_file (str): Path to raster file
+
+    Returns:
+        str: Coordinate system
+    """
+    with rio.open(raster_file) as src:
+        user_crs = src.crs.to_wkt()
+        user_crs = wkt_parser(user_crs)
+        return user_crs
 
 
 def reproject_coords(src_crs, dst_crs, coords):
@@ -58,42 +71,86 @@ def reproject_coords(src_crs, dst_crs, coords):
     return [[x, y] for x, y in zip(xs, ys)]
 
 
-def pixel_to_spatial_rio(raster, x, y):
+def pixel_to_spatial_rio(geotiff, row_index, col_index):
     """Converts pixel coordinates to spatial coordinates using rasterio.
         More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python
     Args:
-        raster (rio.DatasetReader): Rasterio raster object
-        x (int): x coordinate in pixels
-        y (int): y coordinate in pixels
+        geotiff (rio.DatasetReader): Rasterio raster object (do not read, just open via rasterio.open(raster_path))
+        row_index (int): pixel row
+        col_index (int): pixel column
 
     Returns:
         tuple: (x,y) spatial coordinates
     """
 
-    return raster.xy(x, y)  # px, py
+    return geotiff.xy(row_index, col_index)  # px, py
 
 
-def spatial_to_pixel_rio(raster, x, y):
+def pixel_segmentation_to_spatial_rio(geotiff, segmentation):
+    """Converts pixel segmentation to spatial segmentation using rasterio.
+
+    Args:
+        geotiff (rio.DatasetReader): Rasterio raster object for reference
+        segmentation (list): List of pixel coordinates defining the polygon in coco segmentation format
+
+    Returns:
+        converted_coords (list): List of spatial coordinates defining the polygon
+    """
+    converted_coords = []
+    segmentation = [
+        (segmentation[i + 1], segmentation[i]) for i in range(0, len(segmentation), 2)
+    ]
+    for point in segmentation:
+        log.debug(f"Converting {point} to spatial coordinates in raster {geotiff}")
+        x, y = pixel_to_spatial_rio(geotiff, point[0], point[1])
+        spatial_point = [x, y]
+        converted_coords.append(spatial_point)
+
+    polygon = Polygon(converted_coords)
+    return polygon
+
+
+def pixel_bbox_to_spatial_rio(geotiff, bbox):
+    """Converts pixel bbox to spatial bbox using rasterio.
+
+    Args:
+        geotiff (rio.DatasetReader): Rasterio raster object for reference
+        bbox (list): List of pixel coordinates defining the bbox in coco bbox format
+
+    Returns:
+        converted_coords (list): List of spatial coordinates defining the bbox
+    """
+    converted_coords = []
+    x1, y1, x2, y2 = bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]
+    for point in [(x1, y1), (x2, y1), (x2, y2), (x1, y2)]:
+        log.debug(f"Converting {point} to spatial coordinates in raster {geotiff}")
+        x, y = pixel_to_spatial_rio(geotiff, point[0], point[1])
+        spatial_point = x, y
+        converted_coords.append(spatial_point)
+    return converted_coords
+
+
+def spatial_to_pixel_rio(geotiff, x, y):
     """Converts spatial coordinates to pixel coordinates using rasterio.
 
     Args:
-        raster (rio.DatasetReader): Rasterio raster object
+        geotiff (rio.DatasetReader): Rasterio raster object
         x (float): longitudinal coordinate in spatial units
         y (float): latitudinal coordinate in spatial units
 
     Returns:
-        tuple: (row_ind,col_ind) pixel coordinates
+        tuple: (row_index,col_index) pixel coordinates
     """
 
-    row_ind, col_ind = raster.index(x, y)  # lon,lat
-    return row_ind, col_ind
+    row_index, col_index = geotiff.index(x, y)  # lon,lat
+    return row_index, col_index
 
 
-def spatial_polygon_to_pixel_rio(raster, polygon) -> list:
+def spatial_polygon_to_pixel_rio(geotiff, polygon) -> list:
     """Converts spatial polygon to pixel polygon using rasterio.
 
     Args:
-        raster (rio.DatasetReader): Rasterio raster object
+        geotiff (rio.DatasetReader): Rasterio raster object
         polygon (shapely.geometry.Polygon): Polygon in spatial coordinates
 
     Returns:
@@ -101,8 +158,8 @@ def spatial_polygon_to_pixel_rio(raster, polygon) -> list:
     """
     converted_coords = []
     for point in list(MultiPoint(polygon.exterior.coords).geoms):
-        log.debug(f"Converting {point} to pixel coordinates in raster {raster}")
-        y, x = spatial_to_pixel_rio(raster, point.x, point.y)
+        log.debug(f"Converting {point} to pixel coordinates in raster {geotiff}")
+        y, x = spatial_to_pixel_rio(geotiff, point.x, point.y)
         pixel_point = x, y
         converted_coords.append(pixel_point)
     return converted_coords

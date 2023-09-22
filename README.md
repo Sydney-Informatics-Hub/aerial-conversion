@@ -68,6 +68,9 @@ cfg.DATASETS.TEST = (f"{dataset_name}_test",)
 
 ## Usage
 
+To create tiles from a raster file, use the following command:
+
+
 ```
 python geojson2coco.py \
                 --raster-file /path/to/data/chatswood_hd.tif \
@@ -76,9 +79,18 @@ python geojson2coco.py \
                 --json-name /path/to/data/coco_from_gis_hd.json \
                 --info /path/to/data/info.json \
                 --class-column zone_name 
-
 ```
 
+To merge multiple COCO JSON files, and yield a geojson file for the input raster, use the following command:
+
+```
+python coco2geojson.py \
+                --tile-dir /path/to/data/big_tiles \
+                --coco-json /path/to/data/predictions.json \
+                --tile-extension .tif \
+                --geojson-output /path/to/data/output.geojson \
+                --meta-name name_of_the_dataset
+```
 <!-- ---
 
 ## Documentation

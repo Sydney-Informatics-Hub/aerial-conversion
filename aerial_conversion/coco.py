@@ -6,6 +6,7 @@ import os
 import geopandas as gpd
 import pandas as pd
 import rasterio as rio
+from PIL import Image
 from shapely.geometry import Polygon
 
 """A collectio of functions and structures for reading, writing, and creating
@@ -149,6 +150,45 @@ def raster_to_coco(
     image.id = index
 
     return image
+
+
+def create_coco_image_object_png(image_path: str, index: int):
+    """Function to create a COCO image object.
+
+    Args:
+        image_path (str): Path to image
+        index (int): Index of image
+
+    Returns:
+        image (coco_image): COCO image object
+    """
+    im = Image.open("whatever.png")
+
+    image = coco_json.coco_image()
+    image.license = 1
+    image.file_name = os.path.basename(image_path)
+    image.width, image.height = im.size
+    image.id = index
+
+    return image
+
+
+def create_coco_images_object_png(image_path_list: list):
+    """Function to create a COCO images object.
+
+    Args:
+        image_path_list (list): List of image paths
+
+    Returns:
+        images (coco_images): coco_images object
+    """
+    images = coco_json.coco_images()
+    images.images = [
+        create_coco_image_object_png(image_path, index)
+        for index, image_path in enumerate(image_path_list)
+    ]
+
+    return images
 
 
 def coco_bbox(polygon):

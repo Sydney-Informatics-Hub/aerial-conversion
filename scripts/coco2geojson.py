@@ -15,9 +15,12 @@ import pandas as pd
 from shapely.ops import unary_union
 from tqdm import tqdm
 
-from libs.coco import coco_annotation_per_image_df, coco_categories_dict
-from libs.coordinates import pixel_segmentation_to_spatial_rio, read_crs_from_raster
-from libs.tiles import get_tiles_list_from_dir, load_tiles_from_list
+from aerial_conversion.coco import coco_annotation_per_image_df, coco_categories_dict
+from aerial_conversion.coordinates import (
+    pixel_segmentation_to_spatial_rio,
+    read_crs_from_raster,
+)
+from aerial_conversion.tiles import get_tiles_list_from_dir, load_tiles_from_list
 
 # import rasterio as rio
 warnings.simplefilter(action="ignore", category=FutureWarning)

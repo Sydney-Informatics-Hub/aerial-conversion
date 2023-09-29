@@ -227,6 +227,7 @@ def coco_image_annotations(raster_file_list, colour):
 
     Args:
         raster_file_list (list): List of raster files
+        colour (bool, optional): If True, save image in colour.
 
     Returns:
         images (coco_images): coco_images object

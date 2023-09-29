@@ -10,14 +10,14 @@ from pathlib import Path
 import geopandas as gpd
 import rasterio as rio
 
-from libs.coco import (
+from aerial_conversion.coco import (
     coco_image_annotations,
     coco_json,
     coco_polygon_annotations,
     make_category_object,
 )
-from libs.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
-from libs.tiles import save_tiles
+from aerial_conversion.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
+from aerial_conversion.tiles import save_tiles
 
 log = logging.getLogger(__name__)
 

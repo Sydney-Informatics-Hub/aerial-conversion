@@ -64,13 +64,19 @@ def make_category(
     return category
 
 
-def make_category_object(geojson: gpd.GeoDataFrame, class_column: str, trim: int):
+def make_category_object(
+    geojson: gpd.GeoDataFrame,
+    class_column: str,
+    trim: int,
+    supercategory_default: str = "landuse",
+):
     """Function to build a COCO categories object.
 
     Args:
         geojson (gpd.GeoDataFrame): GeoDataFrame containing class data
         class_column (str): Name of column containing class names
         trim (int): Number of characters to trim from class name
+        supercategory_default (str, optional): Default supercategory of classes. Defaults to "landuse".
 
     Returns:
         categories_json (list): List of COCO category objects
@@ -78,14 +84,13 @@ def make_category_object(geojson: gpd.GeoDataFrame, class_column: str, trim: int
 
     # TODO: Implement way to read supercategory data.
 
-    supercategory = "landuse"
     classes = pd.DataFrame(geojson[class_column].unique(), columns=["class"])
     classes["class_id"] = classes.index
     categories_json = []
 
     for _, row in classes.iterrows():
         categories_json.append(
-            make_category(row["class"], row["class_id"], supercategory, trim)
+            make_category(row["class"], row["class_id"], supercategory_default, trim)
         )
 
     return categories_json
@@ -162,7 +167,7 @@ def create_coco_image_object_png(image_path: str, index: int):
     Returns:
         image (coco_image): COCO image object
     """
-    im = Image.open("whatever.png")
+    im = Image.open(image_path)
 
     image = coco_json.coco_image()
     image.license = 1

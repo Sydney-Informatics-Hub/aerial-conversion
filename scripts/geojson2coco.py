@@ -73,7 +73,7 @@ def main(args=None):
         "--tile-dir",
         required=True,
         type=Path,
-        help="Folder path to store the cut raster tiles.",
+        help="Path to where the cut raster tiles should be stored.",
     )
     ap.add_argument(
         "--class-column",
@@ -85,7 +85,7 @@ def main(args=None):
         "--json-name",
         default="coco_from_gis.json",
         type=Path,
-        help="Path to where the output coco file should be stored.",
+        help="Path to the output COCO JSON file.",
     )
     ap.add_argument(
         "--crs", type=str, default=None, help="Specifiy the project crs to use."
@@ -132,7 +132,7 @@ def main(args=None):
         "--info",
         required=True,
         type=Path,
-        help="Path to info description in COCO JSON format. This can be an empty json file.",
+        help="Path to info description in COCO JSON format. This can be an empty file.",
     )
     args = ap.parse_args(args)
 

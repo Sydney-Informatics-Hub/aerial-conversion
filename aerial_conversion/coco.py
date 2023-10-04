@@ -158,7 +158,7 @@ def raster_to_coco(
 
 
 def create_coco_image_object_png(image_path: str, index: int):
-    """Function to create a COCO image object.
+    """Function to create a COCO image (coco_json.coco_image) object.
 
     Args:
         image_path (str): Path to image
@@ -179,7 +179,7 @@ def create_coco_image_object_png(image_path: str, index: int):
 
 
 def create_coco_images_object_png(image_path_list: list):
-    """Function to create a COCO images object.
+    """Function to create a COCO images (coco_json.coco_images) object.
 
     Args:
         image_path_list (list): List of image paths

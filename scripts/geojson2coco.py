@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""This script supports converting a vector shapefile and raster file into a
+COCO format dataset."""
+# -*- coding: utf-8 -*-
 import argparse
 import glob
 import logging
@@ -47,21 +50,43 @@ def assemble_coco_json(
 
 def main(args=None):
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--polygon-file", required=True, default=".", type=Path)
-    ap.add_argument("--raster-file", required=True, type=Path)
+    ap.add_argument(
+        "--polygon-file",
+        required=True,
+        default=".",
+        type=Path,
+        help="Path to a georeferenced shapefile polygon vector file (e.g. geoJSON) that contains annotations for the raster file.",
+    )
+    ap.add_argument(
+        "--raster-file",
+        required=True,
+        type=Path,
+        help="Path to the raster file (e.g. geoTIFF).",
+    )
     ap.add_argument(
         "--tile-size",
         default=1000,
         type=int,
         help="Int length in meters of square tiles to generate from raster. Defaults to 1000 meters.",
     )
-    ap.add_argument("--tile-dir", required=True, type=Path)
+    ap.add_argument(
+        "--tile-dir",
+        required=True,
+        type=Path,
+        help="Path to where the cut raster tiles should be stored.",
+    )
     ap.add_argument(
         "--class-column",
+        required=True,
         type=str,
         help="Column name in GeoJSON where classes are stored.",
     )
-    ap.add_argument("--json-name", default="coco_from_gis.json", type=Path)
+    ap.add_argument(
+        "--json-name",
+        default="coco_from_gis.json",
+        type=Path,
+        help="Path to the output COCO JSON file.",
+    )
     ap.add_argument(
         "--crs", type=str, default=None, help="Specifiy the project crs to use."
     )
@@ -107,7 +132,7 @@ def main(args=None):
         "--info",
         required=True,
         type=Path,
-        help="Path to info description in COCO JSON format.",
+        help="Path to info description in COCO JSON format. This can be an empty file.",
     )
     args = ap.parse_args(args)
 

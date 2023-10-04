@@ -6,6 +6,7 @@ import os
 import geopandas as gpd
 import pandas as pd
 import rasterio as rio
+from PIL import Image
 from shapely.geometry import Polygon
 
 """A collectio of functions and structures for reading, writing, and creating
@@ -18,10 +19,10 @@ class coco_json:
     """Class to hold the coco json format.
 
     Attributes:
-        coco_image (coco_image): coco_image object
-        coco_images (coco_images): coco_images object
-        coco_poly_ann (coco_poly_ann): coco_poly_ann object
-        coco_poly_anns (coco_poly_anns): coco_poly_anns object
+        coco_image (coco_image): coco_image object. The class is intended to hold the meta data, instead of actual image arrays.
+        coco_images (coco_images): coco_images object containing a list of coco_image objects.
+        coco_poly_ann (coco_poly_ann): coco_poly_ann object containing a single polygon annotation.
+        coco_poly_anns (coco_poly_anns): coco_poly_anns object containing a list of coco_poly_ann objects.
     """
 
     def toJSON(self):
@@ -63,13 +64,19 @@ def make_category(
     return category
 
 
-def make_category_object(geojson: gpd.GeoDataFrame, class_column: str, trim: int):
+def make_category_object(
+    geojson: gpd.GeoDataFrame,
+    class_column: str,
+    trim: int,
+    supercategory_default: str = "landuse",
+):
     """Function to build a COCO categories object.
 
     Args:
         geojson (gpd.GeoDataFrame): GeoDataFrame containing class data
         class_column (str): Name of column containing class names
         trim (int): Number of characters to trim from class name
+        supercategory_default (str, optional): Default supercategory of classes. Defaults to "landuse".
 
     Returns:
         categories_json (list): List of COCO category objects
@@ -77,14 +84,13 @@ def make_category_object(geojson: gpd.GeoDataFrame, class_column: str, trim: int
 
     # TODO: Implement way to read supercategory data.
 
-    supercategory = "landuse"
     classes = pd.DataFrame(geojson[class_column].unique(), columns=["class"])
     classes["class_id"] = classes.index
     categories_json = []
 
     for _, row in classes.iterrows():
         categories_json.append(
-            make_category(row["class"], row["class_id"], supercategory, trim)
+            make_category(row["class"], row["class_id"], supercategory_default, trim)
         )
 
     return categories_json
@@ -149,6 +155,45 @@ def raster_to_coco(
     image.id = index
 
     return image
+
+
+def create_coco_image_object_png(image_path: str, index: int):
+    """Function to create a COCO image (coco_json.coco_image) object.
+
+    Args:
+        image_path (str): Path to image
+        index (int): Index of image
+
+    Returns:
+        image (coco_image): COCO image object
+    """
+    im = Image.open(image_path)
+
+    image = coco_json.coco_image()
+    image.license = 1
+    image.file_name = os.path.basename(image_path)
+    image.width, image.height = im.size
+    image.id = index
+
+    return image
+
+
+def create_coco_images_object_png(image_path_list: list):
+    """Function to create a COCO images (coco_json.coco_images) object.
+
+    Args:
+        image_path_list (list): List of image paths
+
+    Returns:
+        images (coco_images): coco_images object
+    """
+    images = coco_json.coco_images()
+    images.images = [
+        create_coco_image_object_png(image_path, index)
+        for index, image_path in enumerate(image_path_list)
+    ]
+
+    return images
 
 
 def coco_bbox(polygon):

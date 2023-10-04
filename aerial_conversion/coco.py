@@ -19,10 +19,10 @@ class coco_json:
     """Class to hold the coco json format.
 
     Attributes:
-        coco_image (coco_image): coco_image object
-        coco_images (coco_images): coco_images object
-        coco_poly_ann (coco_poly_ann): coco_poly_ann object
-        coco_poly_anns (coco_poly_anns): coco_poly_anns object
+        coco_image (coco_image): coco_image object. The class is intended to hold the meta data, instead of actual image arrays.
+        coco_images (coco_images): coco_images object containing a list of coco_image objects.
+        coco_poly_ann (coco_poly_ann): coco_poly_ann object containing a single polygon annotation.
+        coco_poly_anns (coco_poly_anns): coco_poly_anns object containing a list of coco_poly_ann objects.
     """
 
     def toJSON(self):

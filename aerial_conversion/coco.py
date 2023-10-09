@@ -140,6 +140,7 @@ def raster_to_coco(
             dtype=geotiff.dtypes[0],
             nodata=0,
             compress="deflate",
+            transform=geotiff.profile["transform"],
         ) as dst:
             if colour is False:
                 dst.write(raster, 1)

@@ -188,8 +188,12 @@ def get_tile_polygons(raster_tile: str, geojson: gpd.GeoDataFrame, filter: int =
     # Split multipolygon
     tile_polygons = tile_polygons.explode(index_parts=False)
     tile_polygons = tile_polygons.reset_index(drop=True)
-    # Filter out zero area polygons
+
+    # Filter out zero area polygons by re-projecting to the best UTM CRS for area calculation
+    target_crs = tile_polygons.estimate_utm_crs()
+    tile_polygons = tile_polygons.to_crs(target_crs)
     tile_polygons = tile_polygons[tile_polygons.geometry.area > filter]
+    tile_polygons = tile_polygons.to_crs(geojson.crs)
     # if filter is True:
     #     tile_polygons = tile_polygons[tile_polygons.geometry.area > 5000]
     tile_polygons = tile_polygons.reset_index(drop=True)

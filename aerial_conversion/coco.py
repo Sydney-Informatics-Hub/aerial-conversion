@@ -28,6 +28,10 @@ class coco_json:
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, indent=4)
 
+    def write_to_file(self, filepath):
+        with open(filepath, "w") as f:
+            f.write(self.toJSON())
+
     class coco_image:
         pass
 

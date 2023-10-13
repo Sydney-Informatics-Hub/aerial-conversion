@@ -12,10 +12,15 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
+from shapely.geometry import Polygon
 from shapely.ops import unary_union
 from tqdm import tqdm
 
-from aerial_conversion.coco import coco_annotation_per_image_df, coco_categories_dict
+from aerial_conversion.coco import (
+    coco_annotation_per_image_df,
+    coco_categories_dict,
+    polygon_prep,
+)
 from aerial_conversion.coordinates import (
     pixel_segmentation_to_spatial_rio,
     read_crs_from_raster,
@@ -42,6 +47,7 @@ def merge_class_polygons_geopandas(tiles_df_zone_groups, crs, keep_geom_type):
     Returns:
         polygons_df (GeoDataFrame): GeoDataFrame of merged polygons
     """
+    print("Using the overlay method to merge overlapping polygons in each class/zone.")
     # Create a list of GeoDataFrames, one per zone (building/annotation typle/class)
     polygons_df_zone_groups = list()
     for tiles_df_zone in tiles_df_zone_groups:
@@ -103,6 +109,9 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
     Returns:
         polygons_df (GeoDataFrame): GeoDataFrame of merged polygons
     """
+    print(
+        "Using the unary_union method to merge overlapping polygons in each class/zone."
+    )
     # polygons_df_zone_groups = []
     for index, tiles_df_zone in tqdm(
         enumerate(tiles_df_zone_groups), total=len(tiles_df_zone_groups)
@@ -132,6 +141,7 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
             polygons_df_tmp["zone_code"] = zone_code
             polygons_df_tmp["zone_name"] = zone_name
             polygons_df = pd.concat([polygons_df, polygons_df_tmp], ignore_index=True)
+
     polygons_df = polygons_df.explode("geometry").reset_index(drop=True)
 
     # for poly in tqdm(polygons[1:]):
@@ -142,6 +152,26 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
     return polygons_df
 
 
+def shape_regulariser(polygon, simplify_tolerance, minimum_rotated_rectangle):
+    """Regularise the shape of a polygon.
+
+    Args:
+        polygon (shapely.geometry.Polygon): Polygon to regularise
+        simplify_tolerance (float): Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0.
+        minimum_rotated_rectangle (bool): If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.
+
+    Returns:
+        shapely.geometry.Polygon: Regularised polygon
+    """
+    polygon_point_tuples = list(polygon.exterior.coords)
+    polygon = polygon_prep(
+        polygon_point_tuples, simplify_tolerance, minimum_rotated_rectangle
+    )
+    polygon = Polygon(polygon)
+
+    return polygon
+
+
 #%% Command-line driver
 
 
@@ -149,15 +179,14 @@ def main(args=None):
     test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
-        "--tile-dir",
-        # required=True,
+        "tiledir",
         type=Path,
         default=test_data_path,
-        help="Path to the input tiles directory.",
+        help="Path to the input tiles directory with rasters. PNG files are not required.",
     )
     ap.add_argument(
-        "--coco-json",
-        default=os.path.join(test_data_path, "coco_from_gis_hd_200.json"),
+        "cocojson",
+        default=os.path.join(test_data_path, "coco-out-tol_0.4-b.json"),
         type=Path,
         help="Path to the input coco json file.",
     )
@@ -165,10 +194,11 @@ def main(args=None):
         "--tile-extension",
         default="tif",
         type=str,
-        help="Extension of tiles. Defaults to 'tif'.",
+        help="Extension of tiles. Defaults to %(default)s.",
     )
     ap.add_argument(
         "--geojson-output",
+        "-o",
         # required=True,
         default=os.path.join(
             test_data_path,
@@ -179,14 +209,25 @@ def main(args=None):
     )
     ap.add_argument(
         "--tile-search-margin",
-        default=5,
+        default=0,
         type=int,
-        help="Int percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10%.",
+        help="-- Deprecation Warning -- Int percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. This function only reports the marginal tiles and is not functional in any other way. Defaults to %(default)s.",
     )
     ap.add_argument(
         "--not-keep-geom-type",
         action=argparse.BooleanOptionalAction,
-        help="If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.",
+        help="-- Deprecated Argument -- If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.",
+    )
+    ap.add_argument(
+        "--simplify-tolerance",
+        type=float,
+        default=0.7,
+        help="Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0. Defaults to %(default)s.",
+    )
+    ap.add_argument(
+        "--minimum-rotated-rectangle",
+        action=argparse.BooleanOptionalAction,
+        help="If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.",
     )
     ap.add_argument(
         "--meta-name",
@@ -223,10 +264,12 @@ def main(args=None):
     Read tiles and COCO JSON, and convert to GeoJSON.
     """
     geojson_path = args.geojson_output
-    tile_dir = args.tile_dir
+    tile_dir = args.tiledir
     meta_name = args.meta_name
-    coco_json_path = args.coco_json
+    coco_json_path = args.cocojson
     tile_extension = args.tile_extension
+    simplify_tolerance = args.simplify_tolerance
+    minimum_rotated_rectangle = args.minimum_rotated_rectangle
     # keep_geom_type = (
     #     not args.not_keep_geom_type
     # )  # should be True # only meaningful when using geopandas overlay method
@@ -276,6 +319,13 @@ def main(args=None):
 
     polygons_df = merge_class_polygons_shapely(tiles_df_zone_groups, crs)
     # polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow
+
+    # print(polygons_df)
+    polygons_df["geometry"] = polygons_df["geometry"].apply(
+        lambda x: shape_regulariser(x, simplify_tolerance, minimum_rotated_rectangle)
+    )
+
+    # print(polygons_df)
 
     try:
         polygons_df.Name = meta_name

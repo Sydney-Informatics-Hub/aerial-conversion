@@ -419,9 +419,8 @@ def polygon_prep(
     polygon = Polygon(polygon)
     if minimum_rotated_rectangle:
         polygon = polygon.minimum_rotated_rectangle
-    else:
-        if simplify_tolerance > 0:
-            polygon = polygon.simplify(simplify_tolerance)
+    elif simplify_tolerance > 0:
+        polygon = polygon.simplify(simplify_tolerance)
     polygon = np.array(polygon.exterior.coords)
 
     return polygon

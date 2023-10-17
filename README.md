@@ -85,11 +85,12 @@ To merge multiple COCO JSON files, and yield a geojson file for the input raster
 
 ```
 python coco2geojson.py \
-                --tile-dir /path/to/data/big_tiles \
-                --coco-json /path/to/data/predictions.json \
+                /path/to/data/raster_tiles/dir \
+                /path/to/data/predictions-coco.json \
                 --tile-extension .tif \
                 --geojson-output /path/to/data/output.geojson \
-                --meta-name name_of_the_dataset
+                --meta-name <name_of_the_dataset>
+                --minimum-rotated-rectangle 
 ```
 <!-- ---
 

@@ -2,8 +2,10 @@
 import json
 import logging
 import os
+import warnings
 
 import geopandas as gpd
+import numpy as np
 import pandas as pd
 import rasterio as rio
 from PIL import Image
@@ -329,21 +331,24 @@ def coco_annotation_per_image(coco_json: str, tile_search_margin: int = 5):
         image_annotations = []
         margine_h = image["height"] * tile_search_margin / 100
         margine_w = image["width"] * tile_search_margin / 100
-        margine_h_max = image["height"] - margine_h
-        margine_w_max = image["width"] - margine_w
+        margine_h_min = image["height"] - margine_h
+        margine_w_min = image["width"] - margine_w
+        margine_h_max = image["height"] + margine_h
+        margine_w_max = image["width"] + margine_w
         for annotation in coco_data["annotations"]:
             if annotation["image_id"] == image_id:
                 marginal = False
                 x_min, y_min, x_max, y_max = annotation["bbox"]
                 x_max = x_max + x_min
                 y_max = y_max + y_min
-                if (
-                    x_min < margine_w
-                    or x_max > margine_w_max
-                    or y_min < margine_h
-                    or y_max > margine_h_max
-                ):
-                    marginal = True  # print(f"new tile_width: {tile_width}, tile_height: {tile_height}")
+                if tile_search_margin > 0:
+                    if (
+                        x_min < margine_w_min
+                        or x_max > margine_w_max
+                        or y_min < margine_h_min
+                        or y_max > margine_h_max
+                    ):
+                        marginal = True  # print(f"new tile_width: {tile_width}, tile_height: {tile_height}")
 
                 annotation["marginal"] = marginal
                 image_annotations.append(annotation)
@@ -391,3 +396,31 @@ def coco_categories_dict(coco_json: str):
             "supercategory": category["supercategory"],
         }
     return categories_dict
+
+
+def polygon_prep(
+    polygon, simplify_tolerance: float = 0.0, minimum_rotated_rectangle: bool = False
+):
+    """Prepares a polygon for export.
+
+    Args:
+        polygon (list): A list of coordinates
+        simplify_tolerance (float, optional): Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0. Defaults to 0.0. If simplify_tolerance > 0, will simplify the polygon, without minimum rotated rectangle.
+        minimum_rotated_rectangle (bool, optional): If true, will return the minimum rotated rectangle of the polygon. Defaults to False. If simplify_tolerance > 0, will simplify the polygon without minimum rotated rectangle.
+
+    Returns:
+        polygon (list): A list of coordinates
+    """
+
+    if len(polygon) < 3:
+        warnings.warn(
+            f"The polygon has less than 3 points! This is not an actual polygon, and can be a line or point(s). Polygon: {polygon}."
+        )
+    polygon = Polygon(polygon)
+    if minimum_rotated_rectangle:
+        polygon = polygon.minimum_rotated_rectangle
+    elif simplify_tolerance > 0:
+        polygon = polygon.simplify(simplify_tolerance)
+    polygon = np.array(polygon.exterior.coords)
+
+    return polygon

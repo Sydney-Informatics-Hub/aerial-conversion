@@ -138,7 +138,7 @@ Please make sure to install all the required libraries in the
 `requirements.txt <https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/requirements.txt>`__
 file for development.
 
-Commit rules:
+Commit rules
 ~~~~~~~~~~~~~
 
 In this project, ``pre-commit`` is being used. Hence, please make sure

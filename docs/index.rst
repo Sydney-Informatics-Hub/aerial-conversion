@@ -160,7 +160,7 @@ Alternatively, to add the hook, after installing pre-commit, run:
 .. raw:: html
 
 
-Documentation update:
+Documentation update
 ---------------------
 
 -  To update the documentation, navigate to the

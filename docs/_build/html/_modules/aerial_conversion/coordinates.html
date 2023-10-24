@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aerial_conversion.coordinates &mdash; Aerial Conversion v1.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=0737924e"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aerial_conversion.coordinates</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aerial_conversion.coordinates</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">fiona</span>
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">rasterio</span> <span class="k">as</span> <span class="nn">rio</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">MultiPoint</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">,</span> <span class="n">box</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="sd">&quot;&quot;&quot;A collection of functions for converting between spatial and pixel</span>
+<span class="sd">coordinates.</span>
+
+<span class="sd">This module contains functions for converting between spatial and pixel coordinates, as well as functions for creating</span>
+<span class="sd">pixel polygons for a list of raster tiles. The pixel polygons are used to create COCO annotations for each polygon.</span>
+
+<span class="sd">Also contains functions for creating polygons from coco annotations.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="wkt_parser">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.wkt_parser">[docs]</a>
+<span class="k">def</span> <span class="nf">wkt_parser</span><span class="p">(</span><span class="n">wkt_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wkt_keyword</span><span class="o">=</span><span class="s2">&quot;LOCAL_CS[&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parses a WKT string to extract the local coordinate system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        wkt_str (str): WKT string</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Local coordinate system</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Make this tool smarter. Right now it just looks for the first LOCAL_CS[ and returns everything after that.</span>
+
+    <span class="n">wkt</span> <span class="o">=</span> <span class="n">wkt_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wkt_keyword</span> <span class="ow">in</span> <span class="n">wkt</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">wkt</span><span class="p">[</span><span class="n">wkt</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">wkt_keyword</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">wkt_str</span></div>
+
+
+
+<div class="viewcode-block" id="read_crs_from_raster">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.read_crs_from_raster">[docs]</a>
+<span class="k">def</span> <span class="nf">read_crs_from_raster</span><span class="p">(</span><span class="n">raster_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads the coordinate system from a raster file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raster_file (str): Path to raster file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Coordinate system</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">rio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+        <span class="n">user_crs</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">()</span>
+        <span class="n">user_crs</span> <span class="o">=</span> <span class="n">wkt_parser</span><span class="p">(</span><span class="n">user_crs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">user_crs</span></div>
+
+
+
+<div class="viewcode-block" id="reproject_coords">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.reproject_coords">[docs]</a>
+<span class="k">def</span> <span class="nf">reproject_coords</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">coords</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reprojects a list of coordinates from one coordinate system to another.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        src_crs (str): Source coordinate system</span>
+<span class="sd">        dst_crs (str): Destination coordinate system</span>
+<span class="sd">        coords (list): List of coordinates to reproject</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: List of reprojected coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xs</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">]</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">]</span>
+    <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="n">fiona</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">src_crs</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="pixel_to_spatial_rio">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.pixel_to_spatial_rio">[docs]</a>
+<span class="k">def</span> <span class="nf">pixel_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">col_index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts pixel coordinates to spatial coordinates using rasterio.</span>
+<span class="sd">        More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object (do not read, just open via rasterio.open(raster_path))</span>
+<span class="sd">        row_index (int): pixel row</span>
+<span class="sd">        col_index (int): pixel column</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (x,y) spatial coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">geotiff</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">row_index</span><span class="p">,</span> <span class="n">col_index</span><span class="p">)</span>  <span class="c1"># px, py</span></div>
+
+
+
+<div class="viewcode-block" id="pixel_segmentation_to_spatial_rio">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.pixel_segmentation_to_spatial_rio">[docs]</a>
+<span class="k">def</span> <span class="nf">pixel_segmentation_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">segmentation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts pixel segmentation to spatial segmentation using rasterio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object for reference</span>
+<span class="sd">        segmentation (list): List of pixel coordinates defining the polygon in coco segmentation format</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        converted_coords (list): List of spatial coordinates defining the polygon</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">converted_coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">segmentation</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">segmentation</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">segmentation</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">segmentation</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">segmentation</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converting </span><span class="si">{</span><span class="n">point</span><span class="si">}</span><span class="s2"> to spatial coordinates in raster </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pixel_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">spatial_point</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+        <span class="n">converted_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spatial_point</span><span class="p">)</span>
+
+    <span class="n">polygon</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">converted_coords</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">polygon</span></div>
+
+
+
+<div class="viewcode-block" id="pixel_bbox_to_spatial_rio">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.pixel_bbox_to_spatial_rio">[docs]</a>
+<span class="k">def</span> <span class="nf">pixel_bbox_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">bbox</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts pixel bbox to spatial bbox using rasterio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object for reference</span>
+<span class="sd">        bbox (list): List of pixel coordinates defining the bbox in coco bbox format</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        converted_coords (list): List of spatial coordinates defining the bbox</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">converted_coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">),</span> <span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">),</span> <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y2</span><span class="p">)]:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converting </span><span class="si">{</span><span class="n">point</span><span class="si">}</span><span class="s2"> to spatial coordinates in raster </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">pixel_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">spatial_point</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+        <span class="n">converted_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spatial_point</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">converted_coords</span></div>
+
+
+
+<div class="viewcode-block" id="spatial_to_pixel_rio">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.spatial_to_pixel_rio">[docs]</a>
+<span class="k">def</span> <span class="nf">spatial_to_pixel_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts spatial coordinates to pixel coordinates using rasterio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object</span>
+<span class="sd">        x (float): longitudinal coordinate in spatial units</span>
+<span class="sd">        y (float): latitudinal coordinate in spatial units</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (row_index,col_index) pixel coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">row_index</span><span class="p">,</span> <span class="n">col_index</span> <span class="o">=</span> <span class="n">geotiff</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>  <span class="c1"># lon,lat</span>
+    <span class="k">return</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">col_index</span></div>
+
+
+
+<div class="viewcode-block" id="spatial_polygon_to_pixel_rio">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.spatial_polygon_to_pixel_rio">[docs]</a>
+<span class="k">def</span> <span class="nf">spatial_polygon_to_pixel_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">polygon</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts spatial polygon to pixel polygon using rasterio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object</span>
+<span class="sd">        polygon (shapely.geometry.Polygon): Polygon in spatial coordinates</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        converted_coords (list): List of pixel coordinates defining the polygon</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">converted_coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">MultiPoint</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span><span class="o">.</span><span class="n">geoms</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converting </span><span class="si">{</span><span class="n">point</span><span class="si">}</span><span class="s2"> to pixel coordinates in raster </span><span class="si">{</span><span class="n">geotiff</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">spatial_to_pixel_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">pixel_point</span> <span class="o">=</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+        <span class="n">converted_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pixel_point</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">converted_coords</span></div>
+
+
+
+<div class="viewcode-block" id="get_tile_polygons">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.get_tile_polygons">[docs]</a>
+<span class="k">def</span> <span class="nf">get_tile_polygons</span><span class="p">(</span><span class="n">raster_tile</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">geojson</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span> <span class="nb">filter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create polygons from a geosjon for an individual raster tile.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raster_tile: (str) a file name referring to the raster tile to be loaded</span>
+<span class="sd">        geojson: (gpd.GeoDataFrame) a geodataframe with polygons</span>
+<span class="sd">        filter: (int) an integer to filter out polygons with area less than the filter value</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tile_polygon: geodataframe with polygons within the raster&#39;s extent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># print(geojson.shape)</span>
+    <span class="c1"># Load raster tile</span>
+    <span class="n">raster_tile</span> <span class="o">=</span> <span class="n">rio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster_tile</span><span class="p">)</span>
+    <span class="n">raster_extent</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">box</span><span class="p">(</span><span class="o">*</span><span class="n">raster_tile</span><span class="o">.</span><span class="n">bounds</span><span class="p">)]},</span> <span class="n">crs</span><span class="o">=</span><span class="n">geojson</span><span class="o">.</span><span class="n">crs</span>
+    <span class="p">)</span>
+    <span class="c1"># geojson = geojson.to_crs(geojson)</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">raster_extent</span><span class="p">)</span>
+
+    <span class="c1"># Split multipolygon</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="n">index_parts</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Filter out zero area polygons by re-projecting to the best UTM CRS for area calculation</span>
+    <span class="n">target_crs</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">target_crs</span><span class="p">)</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="p">[</span><span class="n">tile_polygons</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">area</span> <span class="o">&gt;</span> <span class="nb">filter</span><span class="p">]</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">geojson</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
+    <span class="c1"># if filter is True:</span>
+    <span class="c1">#     tile_polygons = tile_polygons[tile_polygons.geometry.area &gt; 5000]</span>
+    <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># print(tile_polygons.shape)</span>
+    <span class="k">return</span> <span class="n">tile_polygons</span></div>
+
+
+
+<div class="viewcode-block" id="pixel_polygons_for_raster_tiles">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.pixel_polygons_for_raster_tiles">[docs]</a>
+<span class="k">def</span> <span class="nf">pixel_polygons_for_raster_tiles</span><span class="p">(</span>
+    <span class="n">raster_file_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">geojson</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create pixel polygons for a list of raster tiles.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raster_file_list (list): List of raster files</span>
+<span class="sd">        geojson (gpd.GeoDataFrame): GeoDataFrame containing polygons</span>
+<span class="sd">        verbose (int): Verbosity level</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        pixel_df (pd.DataFrame): DataFrame containing pixel polygons</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tmp_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating pixel polygons for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> tiles&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">):</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">get_tile_polygons</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">geojson</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;raster_tile&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="n">tmp_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Concatenating </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tmp_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> GeoDataFrames&quot;</span><span class="p">)</span>
+    <span class="n">pixel_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">tmp_list</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">pixel_df</span> <span class="o">=</span> <span class="n">pixel_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">])</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating pixel polygons for </span><span class="si">{</span><span class="n">pixel_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> polygons&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">pandas</span><span class="p">()</span>
+        <span class="n">pixel_df</span><span class="p">[</span><span class="s2">&quot;pixel_polygon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixel_df</span><span class="o">.</span><span class="n">progress_apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">spatial_polygon_to_pixel_rio</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">&quot;raster_tile&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pixel_df</span><span class="p">[</span><span class="s2">&quot;pixel_polygon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixel_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">spatial_polygon_to_pixel_rio</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">&quot;raster_tile&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">pixel_df</span><span class="p">[</span><span class="s2">&quot;annot_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">pixel_df</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pixel polygons created for </span><span class="si">{</span><span class="n">pixel_df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> polygons&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pixel_df</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aerial_conversion.coco &mdash; Aerial Conversion v1.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=0737924e"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aerial_conversion.coco</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aerial_conversion.coco</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;A collectio of functions and structures for reading, writing, and creating</span>
+<span class="sd">coco annotations.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">rasterio</span> <span class="k">as</span> <span class="nn">rio</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Polygon</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="coco_json">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json">[docs]</a>
+<span class="k">class</span> <span class="nc">coco_json</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to hold the coco json format.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        coco_image (coco_image): coco_image object. The class is intended to hold the meta data, instead of actual image arrays.</span>
+<span class="sd">        coco_images (coco_images): coco_images object containing a list of coco_image objects.</span>
+<span class="sd">        coco_poly_ann (coco_poly_ann): coco_poly_ann object containing a single polygon annotation.</span>
+<span class="sd">        coco_poly_anns (coco_poly_anns): coco_poly_anns object containing a list of coco_poly_ann objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="coco_json.toJSON">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.toJSON">[docs]</a>
+    <span class="k">def</span> <span class="nf">toJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="coco_json.write_to_file">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.write_to_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">write_to_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toJSON</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="coco_json.coco_image">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_image">[docs]</a>
+    <span class="k">class</span> <span class="nc">coco_image</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a single coco image object.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="coco_json.coco_images">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_images">[docs]</a>
+    <span class="k">class</span> <span class="nc">coco_images</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a list of coco_image objects.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="coco_json.coco_poly_ann">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_poly_ann">[docs]</a>
+    <span class="k">class</span> <span class="nc">coco_poly_ann</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a single coco polygon annotation.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="coco_json.coco_poly_anns">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_poly_anns">[docs]</a>
+    <span class="k">class</span> <span class="nc">coco_poly_anns</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a list of ccoco_poly_ann.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="make_category">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.make_category">[docs]</a>
+<span class="k">def</span> <span class="nf">make_category</span><span class="p">(</span>
+    <span class="n">class_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">class_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">supercategory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;landuse&quot;</span><span class="p">,</span> <span class="n">trim</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to build an individual COCO category.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        class_name (str): Name of class</span>
+<span class="sd">        class_id (int): ID of class</span>
+<span class="sd">        supercategory (str, optional): Supercategory of class. Defaults to &quot;landuse&quot;.</span>
+<span class="sd">        trim (int, optional): Number of characters to trim from class name. Defaults to 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        category (dict): COCO category object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">category</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;supercategory&quot;</span><span class="p">:</span> <span class="n">supercategory</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">class_id</span><span class="p">),</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">class_name</span><span class="p">[</span><span class="n">trim</span><span class="p">:],</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">category</span></div>
+
+
+
+<div class="viewcode-block" id="make_category_object">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.make_category_object">[docs]</a>
+<span class="k">def</span> <span class="nf">make_category_object</span><span class="p">(</span>
+    <span class="n">geojson</span><span class="p">:</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span>
+    <span class="n">class_column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">trim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">supercategory_default</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;landuse&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to build a COCO categories object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        geojson (gpd.GeoDataFrame): GeoDataFrame containing class data</span>
+<span class="sd">        class_column (str): Name of column containing class names</span>
+<span class="sd">        trim (int): Number of characters to trim from class name</span>
+<span class="sd">        supercategory_default (str, optional): Default supercategory of classes. Defaults to &quot;landuse&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        categories_json (list): List of COCO category objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Implement way to read supercategory data.</span>
+
+    <span class="n">classes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">])</span>
+    <span class="n">classes</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">classes</span><span class="o">.</span><span class="n">index</span>
+    <span class="n">categories_json</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">classes</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">categories_json</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">make_category</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">],</span> <span class="n">supercategory_default</span><span class="p">,</span> <span class="n">trim</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">categories_json</span></div>
+
+
+
+<div class="viewcode-block" id="raster_to_coco">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.raster_to_coco">[docs]</a>
+<span class="k">def</span> <span class="nf">raster_to_coco</span><span class="p">(</span>
+    <span class="n">raster_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">extension</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span>
+    <span class="n">bands</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">colour</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to convert a raster to a COCO image object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raster_path (str): Path to raster</span>
+<span class="sd">        index (int): Index of raster</span>
+<span class="sd">        extension (str, optional): Extension of image. Defaults to &quot;png&quot;.</span>
+<span class="sd">        bands (int): The number of bands to save. Default is 3 (for R-G-B).</span>
+<span class="sd">        colour (bool, optional): If True, save image in colour. Defaults to True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        image (coco_image): COCO image object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">geotiff</span> <span class="o">=</span> <span class="n">rio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster_path</span><span class="p">)</span>
+    <span class="n">raster</span> <span class="o">=</span> <span class="n">geotiff</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="c1"># print(raster[:3].shape)</span>
+    <span class="k">if</span> <span class="n">bands</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">raster</span> <span class="o">=</span> <span class="n">raster</span><span class="p">[:</span><span class="n">bands</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">colour</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="c1"># take the average of raster bands</span>
+            <span class="n">raster</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">bands</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># print(raster.shape)</span>
+    <span class="n">raster_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">raster_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">image_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">raster_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">with</span> <span class="n">rio</span><span class="o">.</span><span class="n">Env</span><span class="p">():</span>
+        <span class="k">with</span> <span class="n">rio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="n">image_name</span><span class="p">,</span>
+            <span class="s2">&quot;w&quot;</span><span class="p">,</span>
+            <span class="n">driver</span><span class="o">=</span><span class="n">extension</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">geotiff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">geotiff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">count</span><span class="o">=</span><span class="n">bands</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">geotiff</span><span class="o">.</span><span class="n">dtypes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">nodata</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">compress</span><span class="o">=</span><span class="s2">&quot;deflate&quot;</span><span class="p">,</span>
+            <span class="n">transform</span><span class="o">=</span><span class="n">geotiff</span><span class="o">.</span><span class="n">profile</span><span class="p">[</span><span class="s2">&quot;transform&quot;</span><span class="p">],</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">colour</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span>
+
+    <span class="c1"># Create each individual image object</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">coco_json</span><span class="o">.</span><span class="n">coco_image</span><span class="p">()</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">image_name</span><span class="p">)</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">geotiff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">geotiff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">index</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+
+<div class="viewcode-block" id="create_coco_image_object_png">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.create_coco_image_object_png">[docs]</a>
+<span class="k">def</span> <span class="nf">create_coco_image_object_png</span><span class="p">(</span><span class="n">image_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to create a COCO image (coco_json.coco_image) object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_path (str): Path to image</span>
+<span class="sd">        index (int): Index of image</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        image (coco_image): COCO image object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">coco_json</span><span class="o">.</span><span class="n">coco_image</span><span class="p">()</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">image</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">index</span>
+
+    <span class="k">return</span> <span class="n">image</span></div>
+
+
+
+<div class="viewcode-block" id="create_coco_images_object_png">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.create_coco_images_object_png">[docs]</a>
+<span class="k">def</span> <span class="nf">create_coco_images_object_png</span><span class="p">(</span><span class="n">image_path_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to create a COCO images (coco_json.coco_images) object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_path_list (list): List of image paths</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        images (coco_images): coco_images object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">coco_json</span><span class="o">.</span><span class="n">coco_images</span><span class="p">()</span>
+    <span class="n">images</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">create_coco_image_object_png</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">image_path_list</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">images</span></div>
+
+
+
+<div class="viewcode-block" id="coco_bbox">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_bbox">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_bbox</span><span class="p">(</span><span class="n">polygon</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a COCO format bounding box from a Polygon.</span>
+
+<span class="sd">    Based on code from:</span>
+<span class="sd">    #https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch/#coco-dataset-format</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        polygon (Polygon): Polygon object</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        cc_bbox (list): COCO format bounding box</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">polygon</span><span class="o">.</span><span class="n">bounds</span>
+    <span class="n">top_left_x</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">top_left_y</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># lowest y val, cause it&#39;s from top down.</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cc_bbox</span> <span class="o">=</span> <span class="p">[</span><span class="n">top_left_x</span><span class="p">,</span> <span class="n">top_left_y</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">cc_bbox</span></div>
+
+
+
+<div class="viewcode-block" id="coco_polygon_annotation">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_polygon_annotation">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_polygon_annotation</span><span class="p">(</span><span class="n">pixel_polygon</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">image_id</span><span class="p">,</span> <span class="n">annot_id</span><span class="p">,</span> <span class="n">class_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to convert a polygon to a COCO annotation object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pixel_polygon (list): List of pixel coordinates generated via coordinates.spatial_polygon_to_pixel_rio()</span>
+<span class="sd">        image_id (int): ID of image</span>
+<span class="sd">        annot_id (int): ID of annotation</span>
+<span class="sd">        class_id (int): ID of class</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        annot (dict): COCO annotation object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">annot</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;segmentation&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">pixel_polygon</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">],</span>
+        <span class="s2">&quot;area&quot;</span><span class="p">:</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">pixel_polygon</span><span class="p">)</span><span class="o">.</span><span class="n">area</span><span class="p">,</span>
+        <span class="s2">&quot;iscrowd&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;image_id&quot;</span><span class="p">:</span> <span class="n">image_id</span><span class="p">,</span>
+        <span class="s2">&quot;bbox&quot;</span><span class="p">:</span> <span class="n">coco_bbox</span><span class="p">(</span><span class="n">Polygon</span><span class="p">(</span><span class="n">pixel_polygon</span><span class="p">)),</span>
+        <span class="s2">&quot;category_id&quot;</span><span class="p">:</span> <span class="n">class_id</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">annot_id</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">annot</span></div>
+
+
+
+<div class="viewcode-block" id="coco_polygon_annotations">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_polygon_annotations">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_polygon_annotations</span><span class="p">(</span><span class="n">polygon_df</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to convert a GeoDataFrame of polygons to a list of COCO</span>
+<span class="sd">    annotation objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        polygon_df (gpd.GeoDataFrame): GeoDataFrame containing polygon data</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        annotations_tmp (list): List of COCO annotation objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">annotations_tmp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">polygon_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">annotations_tmp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">coco_polygon_annotation</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">[</span><span class="s2">&quot;pixel_polygon&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;annot_id&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">annotations_tmp</span></div>
+
+
+
+<div class="viewcode-block" id="coco_image_annotations">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_image_annotations">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_image_annotations</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">,</span> <span class="n">colour</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to convert a list of rasters to a list of COCO image objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raster_file_list (list): List of raster files</span>
+<span class="sd">        colour (bool, optional): If True, save image in colour.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        images (coco_images): coco_images object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Make this function more efficcient by parllizing it. Multiple instances of raster_to_coco can be run in parallel.</span>
+
+    <span class="n">images</span> <span class="o">=</span> <span class="n">coco_json</span><span class="o">.</span><span class="n">coco_images</span><span class="p">()</span>
+    <span class="n">images</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">raster_to_coco</span><span class="p">(</span><span class="n">raster_file</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">colour</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">raster_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">images</span></div>
+
+
+
+<div class="viewcode-block" id="coco_reader">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_reader">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_reader</span><span class="p">(</span><span class="n">coco_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to read a COCO JSON file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coco_json (str): Path to COCO JSON file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        coco (dict): COCO JSON file as a dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">coco_json</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">coco</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">coco</span></div>
+
+
+
+<div class="viewcode-block" id="coco_annotation_per_image">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_annotation_per_image">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_annotation_per_image</span><span class="p">(</span><span class="n">coco_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tile_search_margin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to get a list of annotations per image. This function is</span>
+<span class="sd">    necessary in order to get the tile name from the COCO JSON file, as a</span>
+<span class="sd">    reference for spatial coordinate conversion.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coco_json (str): Path to COCO JSON file</span>
+<span class="sd">        tile_search_margin (int, optional): Percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 5 percent.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">            annotations_per_image (list): List of annotations per image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coco_data</span> <span class="o">=</span> <span class="n">coco_reader</span><span class="p">(</span><span class="n">coco_json</span><span class="p">)</span>
+    <span class="n">annotations_per_image</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]:</span>
+        <span class="n">image_id</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="n">image_annotations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">margine_h</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">tile_search_margin</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="n">margine_w</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">tile_search_margin</span> <span class="o">/</span> <span class="mi">100</span>
+        <span class="n">margine_h_min</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">margine_h</span>
+        <span class="n">margine_w_min</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">margine_w</span>
+        <span class="n">margine_h_max</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">margine_h</span>
+        <span class="n">margine_w_max</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">margine_w</span>
+        <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">image_id</span><span class="p">:</span>
+                <span class="n">marginal</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">]</span>
+                <span class="n">x_max</span> <span class="o">=</span> <span class="n">x_max</span> <span class="o">+</span> <span class="n">x_min</span>
+                <span class="n">y_max</span> <span class="o">=</span> <span class="n">y_max</span> <span class="o">+</span> <span class="n">y_min</span>
+                <span class="k">if</span> <span class="n">tile_search_margin</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="n">x_min</span> <span class="o">&lt;</span> <span class="n">margine_w_min</span>
+                        <span class="ow">or</span> <span class="n">x_max</span> <span class="o">&gt;</span> <span class="n">margine_w_max</span>
+                        <span class="ow">or</span> <span class="n">y_min</span> <span class="o">&lt;</span> <span class="n">margine_h_min</span>
+                        <span class="ow">or</span> <span class="n">y_max</span> <span class="o">&gt;</span> <span class="n">margine_h_max</span>
+                    <span class="p">):</span>
+                        <span class="n">marginal</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># print(f&quot;new tile_width: {tile_width}, tile_height: {tile_height}&quot;)</span>
+
+                <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;marginal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">marginal</span>
+                <span class="n">image_annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+        <span class="n">annotations_per_image</span><span class="p">[</span><span class="n">image_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;tile_name&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;annotations&quot;</span><span class="p">:</span> <span class="n">image_annotations</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">annotations_per_image</span></div>
+
+
+
+<div class="viewcode-block" id="coco_annotation_per_image_df">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_annotation_per_image_df">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_annotation_per_image_df</span><span class="p">(</span><span class="n">coco_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tile_search_margin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to get a list of annotations per image. This function is</span>
+<span class="sd">    necessary in order to get the tile name from the COCO JSON file, as a</span>
+<span class="sd">    reference for spatial coordinate conversion.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coco_json (str): Path to COCO JSON file</span>
+<span class="sd">        tile_search_margin (int, optional): Percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. Defaults to 10.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">            annotations_per_image (pd.DataFrame): Data frame of annotations with images image</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coco_images_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">coco_annotation_per_image</span><span class="p">(</span><span class="n">coco_json</span><span class="p">,</span> <span class="n">tile_search_margin</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">coco_images_df</span> <span class="o">=</span> <span class="n">coco_images_df</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="s2">&quot;annotations&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">coco_images_df</span></div>
+
+
+
+<div class="viewcode-block" id="coco_categories_dict">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_categories_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">coco_categories_dict</span><span class="p">(</span><span class="n">coco_json</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to get a list of categories from a COCO JSON file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        coco_json (str): Path to COCO JSON file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">            categories (list): List of categories</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coco_data</span> <span class="o">=</span> <span class="n">coco_reader</span><span class="p">(</span><span class="n">coco_json</span><span class="p">)</span>
+    <span class="n">categories</span> <span class="o">=</span> <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">]</span>
+    <span class="n">categories_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+        <span class="n">categories_dict</span><span class="p">[</span><span class="n">category</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;supercategory&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">[</span><span class="s2">&quot;supercategory&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="k">return</span> <span class="n">categories_dict</span></div>
+
+
+
+<div class="viewcode-block" id="polygon_prep">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.polygon_prep">[docs]</a>
+<span class="k">def</span> <span class="nf">polygon_prep</span><span class="p">(</span>
+    <span class="n">polygon</span><span class="p">,</span> <span class="n">simplify_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">minimum_rotated_rectangle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepares a polygon for export.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        polygon (list): A list of coordinates</span>
+<span class="sd">        simplify_tolerance (float, optional): Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0. Defaults to 0.0. If simplify_tolerance &gt; 0, will simplify the polygon, without minimum rotated rectangle.</span>
+<span class="sd">        minimum_rotated_rectangle (bool, optional): If true, will return the minimum rotated rectangle of the polygon. Defaults to False. If simplify_tolerance &gt; 0, will simplify the polygon without minimum rotated rectangle.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        polygon (list): A list of coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The polygon has less than 3 points! This is not an actual polygon, and can be a line or point(s). Polygon: </span><span class="si">{</span><span class="n">polygon</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">polygon</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">minimum_rotated_rectangle</span><span class="p">:</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">polygon</span><span class="o">.</span><span class="n">minimum_rotated_rectangle</span>
+    <span class="k">elif</span> <span class="n">simplify_tolerance</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">polygon</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">simplify_tolerance</span><span class="p">)</span>
+    <span class="n">polygon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">polygon</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

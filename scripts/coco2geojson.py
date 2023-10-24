@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""This script supports converting a COCO dataset into a georeferenced geojson
+file."""
 import argparse
 
 # import glob
@@ -176,6 +178,7 @@ def shape_regulariser(polygon, simplify_tolerance, minimum_rotated_rectangle):
 
 
 def main(args=None):
+    """Command-line driver."""
     test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(

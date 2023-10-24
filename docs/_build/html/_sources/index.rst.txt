@@ -11,7 +11,7 @@ Welcome to Aerial Conversion documentation!
    :caption: Contents:
 
 
-This is an Open source tools enabling interchange between computer vision annotation and GIS data formats. Part of `PIPE-3956 Aerial Segmentation <https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation>`__. 
+This is an open-source tool enabling interchange between computer vision annotation and GIS data formats. Part of `PIPE-3956 Aerial Segmentation <https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation>`__. 
 The code is available on `GitHub <https://github.com/Sydney-Informatics-Hub/aerial-conversion>`__.
 
 
@@ -95,7 +95,7 @@ snippet:
    project = rf.workspace(workspace_name).project(project_name)
    dataset = project.version(dataset_version).download(dataset_download_name)
 
-.. raw:: html
+
 
 
 Usage
@@ -126,7 +126,6 @@ input raster, use the following command:
                    --meta-name <name_of_the_dataset>
                    --minimum-rotated-rectangle 
 
-.. raw:: html
 
 
 --------------
@@ -138,7 +137,7 @@ Please make sure to install all the required libraries in the
 `requirements.txt <https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/requirements.txt>`__
 file for development.
 
-Commit rules:
+Commit rules
 ~~~~~~~~~~~~~
 
 In this project, ``pre-commit`` is being used. Hence, please make sure
@@ -157,10 +156,9 @@ Alternatively, to add the hook, after installing pre-commit, run:
 
    pre-commit install
 
-.. raw:: html
 
 
-Documentation update:
+Documentation update
 ---------------------
 
 -  To update the documentation, navigate to the

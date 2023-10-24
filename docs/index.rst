@@ -11,7 +11,7 @@ Welcome to Aerial Conversion documentation!
    :caption: Contents:
 
 
-This is an Open source tools enabling interchange between computer vision annotation and GIS data formats. Part of `PIPE-3956 Aerial Segmentation <https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation>`__. 
+This is an open-source tool enabling interchange between computer vision annotation and GIS data formats. Part of `PIPE-3956 Aerial Segmentation <https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation>`__. 
 The code is available on `GitHub <https://github.com/Sydney-Informatics-Hub/aerial-conversion>`__.
 
 

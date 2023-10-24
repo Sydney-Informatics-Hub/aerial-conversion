@@ -31,6 +31,9 @@
           <a href="../../index.html" class="icon icon-home">
             Aerial Conversion
           </a>
+              <div class="version">
+                v1.1.0
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -67,6 +70,8 @@
              
   <h1>Source code for aerial_conversion.coco</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;A collectio of functions and structures for reading, writing, and creating</span>
+<span class="sd">coco annotations.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -79,8 +84,6 @@
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Polygon</span>
 
-<span class="sd">&quot;&quot;&quot;A collectio of functions and structures for reading, writing, and creating</span>
-<span class="sd">coco annotations.&quot;&quot;&quot;</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -113,24 +116,28 @@
 <div class="viewcode-block" id="coco_json.coco_image">
 <a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_image">[docs]</a>
     <span class="k">class</span> <span class="nc">coco_image</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a single coco image object.&quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="coco_json.coco_images">
 <a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_images">[docs]</a>
     <span class="k">class</span> <span class="nc">coco_images</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a list of coco_image objects.&quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="coco_json.coco_poly_ann">
 <a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_poly_ann">[docs]</a>
     <span class="k">class</span> <span class="nc">coco_poly_ann</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a single coco polygon annotation.&quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="coco_json.coco_poly_anns">
 <a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coco.coco_json.coco_poly_anns">[docs]</a>
     <span class="k">class</span> <span class="nc">coco_poly_anns</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Class to hold a list of ccoco_poly_ann.&quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 </div>
 

@@ -47,12 +47,6 @@
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">aerial_conversion package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-aerial_conversion.COCO_validator">aerial_conversion.COCO_validator module</a><ul>
-<li><a class="reference internal" href="#aerial_conversion.COCO_validator.annotation_assertions"><code class="docutils literal notranslate"><span class="pre">annotation_assertions()</span></code></a></li>
-<li><a class="reference internal" href="#aerial_conversion.COCO_validator.assertions"><code class="docutils literal notranslate"><span class="pre">assertions()</span></code></a></li>
-<li><a class="reference internal" href="#aerial_conversion.COCO_validator.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#module-aerial_conversion.coco">aerial_conversion.coco module</a><ul>
 <li><a class="reference internal" href="#aerial_conversion.coco.coco_annotation_per_image"><code class="docutils literal notranslate"><span class="pre">coco_annotation_per_image()</span></code></a></li>
 <li><a class="reference internal" href="#aerial_conversion.coco.coco_annotation_per_image_df"><code class="docutils literal notranslate"><span class="pre">coco_annotation_per_image_df()</span></code></a></li>
@@ -105,6 +99,12 @@
 <li><a class="reference internal" href="#aerial_conversion.tiles.tile_neighbourhood_list"><code class="docutils literal notranslate"><span class="pre">tile_neighbourhood_list()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#aerial-conversion-coco-validator-module">aerial_conversion.COCO_validator module</a><ul>
+<li><a class="reference internal" href="#aerial_conversion.COCO_validator.annotation_assertions"><code class="docutils literal notranslate"><span class="pre">annotation_assertions()</span></code></a></li>
+<li><a class="reference internal" href="#aerial_conversion.COCO_validator.assertions"><code class="docutils literal notranslate"><span class="pre">assertions()</span></code></a></li>
+<li><a class="reference internal" href="#aerial_conversion.COCO_validator.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-aerial_conversion">Module contents</a></li>
 </ul>
 </li>
@@ -139,26 +139,10 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 </section>
-<section id="module-aerial_conversion.COCO_validator">
-<span id="aerial-conversion-coco-validator-module"></span><h2>aerial_conversion.COCO_validator module<a class="headerlink" href="#module-aerial_conversion.COCO_validator" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="aerial_conversion.COCO_validator.annotation_assertions">
-<span class="sig-prename descclassname"><span class="pre">aerial_conversion.COCO_validator.</span></span><span class="sig-name descname"><span class="pre">annotation_assertions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/COCO_validator.html#annotation_assertions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.COCO_validator.annotation_assertions" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="aerial_conversion.COCO_validator.assertions">
-<span class="sig-prename descclassname"><span class="pre">aerial_conversion.COCO_validator.</span></span><span class="sig-name descname"><span class="pre">assertions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/COCO_validator.html#assertions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.COCO_validator.assertions" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="aerial_conversion.COCO_validator.main">
-<span class="sig-prename descclassname"><span class="pre">aerial_conversion.COCO_validator.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coco_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/COCO_validator.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.COCO_validator.main" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</section>
 <section id="module-aerial_conversion.coco">
 <span id="aerial-conversion-coco-module"></span><h2>aerial_conversion.coco module<a class="headerlink" href="#module-aerial_conversion.coco" title="Link to this heading"></a></h2>
+<p>A collectio of functions and structures for reading, writing, and creating
+coco annotations.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="aerial_conversion.coco.coco_annotation_per_image">
 <span class="sig-prename descclassname"><span class="pre">aerial_conversion.coco.</span></span><span class="sig-name descname"><span class="pre">coco_annotation_per_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coco_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tile_search_margin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/coco.html#coco_annotation_per_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.coco.coco_annotation_per_image" title="Link to this definition"></a></dt>
@@ -312,24 +296,28 @@ reference for spatial coordinate conversion.</p>
 <dt class="sig sig-object py" id="id0">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coco_image</span></span><a class="reference internal" href="_modules/aerial_conversion/coco.html#coco_json.coco_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold a single coco image object.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="id1">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coco_images</span></span><a class="reference internal" href="_modules/aerial_conversion/coco.html#coco_json.coco_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold a list of coco_image objects.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="id2">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coco_poly_ann</span></span><a class="reference internal" href="_modules/aerial_conversion/coco.html#coco_json.coco_poly_ann"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold a single coco polygon annotation.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="id3">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coco_poly_anns</span></span><a class="reference internal" href="_modules/aerial_conversion/coco.html#coco_json.coco_poly_anns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to hold a list of ccoco_poly_ann.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -848,6 +836,25 @@ transform (Affine): Rasterio affine transform object</p>
 </dd>
 </dl>
 </dd></dl>
+
+</section>
+<section id="aerial-conversion-coco-validator-module">
+<h2>aerial_conversion.COCO_validator module<a class="headerlink" href="#aerial-conversion-coco-validator-module" title="Link to this heading"></a></h2>
+<p>This module is currently not used in the main code. It is a work in progress.</p>
+<dl class="py function" id="module-aerial_conversion.COCO_validator">
+<dt class="sig sig-object py" id="aerial_conversion.COCO_validator.annotation_assertions">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.COCO_validator.</span></span><span class="sig-name descname"><span class="pre">annotation_assertions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/COCO_validator.html#annotation_assertions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.COCO_validator.annotation_assertions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aerial_conversion.COCO_validator.assertions">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.COCO_validator.</span></span><span class="sig-name descname"><span class="pre">assertions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/COCO_validator.html#assertions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.COCO_validator.assertions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aerial_conversion.COCO_validator.main">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.COCO_validator.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coco_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/COCO_validator.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.COCO_validator.main" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 <section id="module-aerial_conversion">

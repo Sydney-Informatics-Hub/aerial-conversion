@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to Aerial Conversion documentation!
-========================================
+===========================================
 
 .. toctree::
    :maxdepth: 2
@@ -22,15 +22,15 @@ The code is available on `GitHub <https://github.com/Sydney-Informatics-Hub/aeri
 Table of contetns
 =================
 
--  `Input and Output Data Formats <#Input-and-Output-Data-Formats>`__
+-  `Input and Output Data Formats <#input-and-output-data-formats>`__
 
 -  `Setup <#usage>`__
 
--  `Dataset <#Dataset>`__
+-  `Dataset <#dataset>`__
 
--  `Usage <#Usage>`__
+-  `Usage <#usage>`__
 
--  `Contributing to the Project <#Contributing-to-the-Project>`__
+-  `Contributing to the Project <#contributing-to-the-project>`__
 
 
 --------------

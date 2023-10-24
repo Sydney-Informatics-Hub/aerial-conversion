@@ -31,6 +31,9 @@
           <a href="../../index.html" class="icon icon-home">
             Aerial Conversion
           </a>
+              <div class="version">
+                v1.1.0
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -153,6 +156,7 @@
 <span class="k">def</span> <span class="nf">pixel_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">col_index</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts pixel coordinates to spatial coordinates using rasterio.</span>
 <span class="sd">        More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python</span>
+<span class="sd">    </span>
 <span class="sd">    Args:</span>
 <span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object (do not read, just open via rasterio.open(raster_path))</span>
 <span class="sd">        row_index (int): pixel row</span>

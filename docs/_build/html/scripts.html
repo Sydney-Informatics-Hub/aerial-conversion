@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scripts package &mdash; Aerial Conversion v1.1.0 documentation</title>
+  <title>Scripts &mdash; Aerial Conversion v1.1.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -45,8 +45,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">scripts package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#">Scripts</a><ul>
 <li><a class="reference internal" href="#module-scripts.coco2geojson">scripts.coco2geojson module</a><ul>
 <li><a class="reference internal" href="#scripts.coco2geojson.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_geopandas"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_geopandas()</span></code></a></li>
@@ -78,7 +77,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">scripts package</li>
+      <li class="breadcrumb-item active">Scripts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/scripts.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -88,17 +87,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="scripts-package">
-<h1>scripts package<a class="headerlink" href="#scripts-package" title="Link to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-</section>
+  <section id="scripts">
+<h1>Scripts<a class="headerlink" href="#scripts" title="Link to this heading"></a></h1>
+<p>The aerial conversion package is a collection of <code class="docutils literal notranslate"><span class="pre">scripts</span></code> and the <code class="docutils literal notranslate"><span class="pre">aerial_conversion</span></code> modules. The scripts provide command line tools to convert aerial imagery to a common format and projection (i.e. coco), and vice versa. The <code class="docutils literal notranslate"><span class="pre">geojson2coco</span></code> and <code class="docutils literal notranslate"><span class="pre">coco2geojson</span></code> scripts provides a python interface to the conversion tools available in <code class="docutils literal notranslate"><span class="pre">aerial_conversion</span></code> module.</p>
 <section id="module-scripts.coco2geojson">
 <span id="scripts-coco2geojson-module"></span><h2>scripts.coco2geojson module<a class="headerlink" href="#module-scripts.coco2geojson" title="Link to this heading"></a></h2>
+<p>This script supports converting a COCO dataset into a georeferenced geojson file.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="scripts.coco2geojson.main">
 <span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.main" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Command-line driver.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scripts.coco2geojson.merge_class_polygons_geopandas">
@@ -177,7 +176,8 @@ COCO format dataset.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="scripts.geojson2coco.main">
 <span class="sig-prename descclassname"><span class="pre">scripts.geojson2coco.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/geojson2coco.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.geojson2coco.main" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Command-line driver.</p>
+</dd></dl>
 
 </section>
 <section id="module-scripts">

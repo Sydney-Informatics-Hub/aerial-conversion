@@ -49,6 +49,7 @@ def assemble_coco_json(
 
 
 def main(args=None):
+    """Command-line driver."""
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--polygon-file",

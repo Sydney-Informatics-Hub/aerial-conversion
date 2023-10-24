@@ -95,7 +95,7 @@ snippet:
    project = rf.workspace(workspace_name).project(project_name)
    dataset = project.version(dataset_version).download(dataset_download_name)
 
-.. raw:: html
+
 
 
 Usage
@@ -126,7 +126,6 @@ input raster, use the following command:
                    --meta-name <name_of_the_dataset>
                    --minimum-rotated-rectangle 
 
-.. raw:: html
 
 
 --------------
@@ -157,7 +156,6 @@ Alternatively, to add the hook, after installing pre-commit, run:
 
    pre-commit install
 
-.. raw:: html
 
 
 Documentation update

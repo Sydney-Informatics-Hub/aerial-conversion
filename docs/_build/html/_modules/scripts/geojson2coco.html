@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.geojson2coco &mdash; Aerial Conversion v1.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=0737924e"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.geojson2coco</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.geojson2coco</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This script supports converting a vector shapefile and raster file into a</span>
+<span class="sd">COCO format dataset.&quot;&quot;&quot;</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">import</span> <span class="nn">rasterio</span> <span class="k">as</span> <span class="nn">rio</span>
+
+<span class="kn">from</span> <span class="nn">aerial_conversion.coco</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">coco_image_annotations</span><span class="p">,</span>
+    <span class="n">coco_json</span><span class="p">,</span>
+    <span class="n">coco_polygon_annotations</span><span class="p">,</span>
+    <span class="n">make_category_object</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">aerial_conversion.coordinates</span> <span class="kn">import</span> <span class="n">pixel_polygons_for_raster_tiles</span><span class="p">,</span> <span class="n">wkt_parser</span>
+<span class="kn">from</span> <span class="nn">aerial_conversion.tiles</span> <span class="kn">import</span> <span class="n">save_tiles</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="assemble_coco_json">
+<a class="viewcode-back" href="../../scripts.html#scripts.geojson2coco.assemble_coco_json">[docs]</a>
+<span class="k">def</span> <span class="nf">assemble_coco_json</span><span class="p">(</span>
+    <span class="n">raster_file_list</span><span class="p">,</span> <span class="n">geojson</span><span class="p">,</span> <span class="n">license_json</span><span class="p">,</span> <span class="n">info_json</span><span class="p">,</span> <span class="n">categories_json</span><span class="p">,</span> <span class="n">colour</span>
+<span class="p">):</span>
+
+    <span class="n">pixel_poly_df</span> <span class="o">=</span> <span class="n">pixel_polygons_for_raster_tiles</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">,</span> <span class="n">geojson</span><span class="p">)</span>
+    <span class="c1"># pixel_poly_df.to_csv(json_name[:-5]+&quot;_df.csv&quot;)</span>
+    <span class="c1"># pixel_poly_df_sample = pixel_poly_df.sample(1)</span>
+    <span class="c1"># pixel_poly_df_sample.to_csv(json_name[:-5]+&quot;.csv&quot;)</span>
+
+    <span class="n">coco</span> <span class="o">=</span> <span class="n">coco_json</span><span class="p">()</span>
+    <span class="n">coco</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="n">coco_image_annotations</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">,</span> <span class="n">colour</span><span class="p">)</span><span class="o">.</span><span class="n">images</span>
+    <span class="n">coco</span><span class="o">.</span><span class="n">annotations</span> <span class="o">=</span> <span class="n">coco_polygon_annotations</span><span class="p">(</span><span class="n">pixel_poly_df</span><span class="p">)</span>
+    <span class="n">coco</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">license_json</span>
+    <span class="n">coco</span><span class="o">.</span><span class="n">categories</span> <span class="o">=</span> <span class="n">categories_json</span>
+    <span class="n">coco</span><span class="o">.</span><span class="n">info</span> <span class="o">=</span> <span class="n">info_json</span>
+    <span class="n">coco</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s2">&quot;instances&quot;</span>
+
+    <span class="k">return</span> <span class="n">coco</span></div>
+
+
+
+<span class="c1">#%% Command-line driver</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../scripts.html#scripts.geojson2coco.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Command-line driver.&quot;&quot;&quot;</span>
+    <span class="n">ap</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--polygon-file&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;.&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a georeferenced shapefile polygon vector file (e.g. geoJSON) that contains annotations for the raster file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--raster-file&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the raster file (e.g. geoTIFF).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--tile-size&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Int length in meters of square tiles to generate from raster. Defaults to 1000 meters.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--tile-dir&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to where the cut raster tiles should be stored.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--class-column&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Column name in GeoJSON where classes are stored.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--json-name&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;coco_from_gis.json&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the output COCO JSON file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--crs&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specifiy the project crs to use.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--trim-class&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Characters to trim of the start of each class name. A clummsy solution, set to 0 by default which leaves class names as is.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--cleanup&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If set, will purge *.tif tiles from the directory. Default to false.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--save-gdf&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If set, will save a GeoDataFrame that you can use to reconstruct a spatial version of the dataset.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--short-file-name&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If set, saves a short file name in the COCO for images.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--grayscale&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If set, will generate grayscale images.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--offset&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Padding/offset/overlap in percentage of tile. Defaults to 0.0.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--license&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a license description in COCO JSON format. If not supplied, will default to MIT license.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--info&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to info description in COCO JSON format. This can be an empty file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create tiles from raster and convert to COCO JSON format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># root_dir = &quot;/home/sahand/Data/GIS2COCO/&quot;</span>
+    <span class="c1"># raster_path = os.path.join(root_dir, &quot;chatswood/chatswood_hd.tif&quot;)</span>
+    <span class="c1"># geojson_path = os.path.join(root_dir, &quot;chatswood/chatswood.geojson&quot;)</span>
+    <span class="c1"># out_path = os.path.join(root_dir, &quot;chatswood/tiles/&quot;)</span>
+    <span class="c1"># tile_size = 500</span>
+    <span class="c1"># user_crs = None</span>
+    <span class="c1"># class_column = &quot;zone_name&quot;  # &quot;zone_name&quot; # &quot;zone_code&quot;</span>
+    <span class="c1"># trim_class = 0</span>
+    <span class="c1"># license = None</span>
+    <span class="c1"># info = os.path.join(root_dir, &quot;chatswood/info.json&quot;)</span>
+    <span class="c1"># json_name = os.path.join(root_dir, &quot;chatswood/coco_from_gis.json&quot;)</span>
+    <span class="c1"># colour = True</span>
+    <span class="c1"># offset = 0.0</span>
+
+    <span class="n">raster_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">raster_file</span>
+    <span class="n">geojson_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">polygon_file</span>
+    <span class="n">out_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_dir</span>
+    <span class="n">tile_size</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_size</span>
+    <span class="n">user_crs</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">crs</span>
+    <span class="n">class_column</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span>
+    <span class="n">trim_class</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">trim_class</span>
+    <span class="n">license</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">license</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">info</span>
+    <span class="n">json_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">json_name</span>
+    <span class="n">colour</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">grayscale</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">offset</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating </span><span class="si">{</span><span class="n">tile_size</span><span class="si">}</span><span class="s2"> m*m tiles from </span><span class="si">{</span><span class="n">raster_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Read input files</span>
+    <span class="n">geotiff</span> <span class="o">=</span> <span class="n">rio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster_path</span><span class="p">)</span>
+    <span class="n">geojson</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">)</span>
+    <span class="c1"># geojson.crs</span>
+    <span class="c1"># Reproject geojson on geotiff</span>
+    <span class="k">if</span> <span class="n">user_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">user_crs</span> <span class="o">=</span> <span class="n">geotiff</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">()</span>
+        <span class="n">user_crs</span> <span class="o">=</span> <span class="n">wkt_parser</span><span class="p">(</span><span class="n">user_crs</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">geojson</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">user_crs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CRS not recognized, please specify a valid CRS. Error message: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">e</span>
+
+    <span class="c1"># Create raster tiles</span>
+    <span class="n">save_tiles</span><span class="p">(</span>
+        <span class="n">geotiff</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">tile_size</span><span class="p">,</span> <span class="n">tile_template</span><span class="o">=</span><span class="s2">&quot;tile_</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2">.tif&quot;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span>
+    <span class="p">)</span>
+    <span class="n">geotiff</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Read the created raster tiles into a list.</span>
+    <span class="n">raster_file_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">iglob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;*.tif&quot;</span><span class="p">)):</span>
+        <span class="n">raster_file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> raster tiles created&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Create class_id for category mapping</span>
+    <span class="n">geojson</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span><span class="o">.</span><span class="n">factorize</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">categories_json</span> <span class="o">=</span> <span class="n">make_category_object</span><span class="p">(</span><span class="n">geojson</span><span class="p">,</span> <span class="n">class_column</span><span class="p">,</span> <span class="n">trim_class</span><span class="p">)</span>
+
+    <span class="c1"># If license is not supplied, use MIT by default</span>
+    <span class="k">if</span> <span class="n">license</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">license_json</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/by-nc-sa/2.0/&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Attribution-NonCommercial-ShareAlike License&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Read user supplied license</span>
+        <span class="c1"># TODO: incorporate different licenses depending on images: this feature is almost never used but would be nice to support.</span>
+        <span class="n">license_json</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">license</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+    <span class="n">info_json</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting to COCO&quot;</span><span class="p">)</span>
+    <span class="c1"># We are now ready to make the COCO JSON.</span>
+    <span class="n">spatial_coco</span> <span class="o">=</span> <span class="n">assemble_coco_json</span><span class="p">(</span>
+        <span class="n">raster_file_list</span><span class="p">,</span> <span class="n">geojson</span><span class="p">,</span> <span class="n">license_json</span><span class="p">,</span> <span class="n">info_json</span><span class="p">,</span> <span class="n">categories_json</span><span class="p">,</span> <span class="n">colour</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Write COCO JSON to file.</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spatial_coco</span><span class="o">.</span><span class="n">toJSON</span><span class="p">())</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;COCO JSON saved to </span><span class="si">{</span><span class="n">json_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># if args.save_gdf:</span>
+    <span class="c1">#     pixel_poly_df[&#39;raster_tile_name&#39;] = pixel_poly_df.apply(lambda row: os.path.basename(row[&#39;raster_tile&#39;]), axis = 1)</span>
+    <span class="c1">#     with open (&quot;gdf_output.csv&quot;, &quot;w&quot;) as f:</span>
+    <span class="c1">#         f.write(pixel_poly_df)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

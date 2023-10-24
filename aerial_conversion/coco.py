@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""A collectio of functions and structures for reading, writing, and creating
+coco annotations."""
 import json
 import logging
 import os
@@ -10,9 +12,6 @@ import pandas as pd
 import rasterio as rio
 from PIL import Image
 from shapely.geometry import Polygon
-
-"""A collectio of functions and structures for reading, writing, and creating
-coco annotations."""
 
 log = logging.getLogger(__name__)
 
@@ -35,15 +34,23 @@ class coco_json:
             f.write(self.toJSON())
 
     class coco_image:
+        """Class to hold a single coco image object."""
+
         pass
 
     class coco_images:
+        """Class to hold a list of coco_image objects."""
+
         pass
 
     class coco_poly_ann:
+        """Class to hold a single coco polygon annotation."""
+
         pass
 
     class coco_poly_anns:
+        """Class to hold a list of ccoco_poly_ann."""
+
         pass
 
 

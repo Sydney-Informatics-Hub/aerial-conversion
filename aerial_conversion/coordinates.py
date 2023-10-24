@@ -72,8 +72,10 @@ def reproject_coords(src_crs, dst_crs, coords):
 
 
 def pixel_to_spatial_rio(geotiff, row_index, col_index):
-    """Converts pixel coordinates to spatial coordinates using rasterio.
-        More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python
+    """Converts pixel coordinates to spatial coordinates using rasterio. More
+    information here: https://stackoverflow.com/questions/52443906/pixel-array-
+    position-to-lat-long-gdal-python.
+
     Args:
         geotiff (rio.DatasetReader): Rasterio raster object (do not read, just open via rasterio.open(raster_path))
         row_index (int): pixel row

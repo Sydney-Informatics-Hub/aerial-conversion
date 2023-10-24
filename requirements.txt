@@ -10,3 +10,4 @@ geoplot
 fiona
 pre-commit
 Sphinx
+sphinx_rtd_theme

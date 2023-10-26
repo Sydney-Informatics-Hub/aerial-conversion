@@ -18,10 +18,10 @@ def main(args):
 
     Usage Example:
         # Convert raster and vector pairs without concatenation
-        python script_name.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir
+        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir
 
         # Convert raster and vector pairs with concatenation
-        python script_name.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
+        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
     """
     
     # Specify the output directory

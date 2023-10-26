@@ -197,7 +197,7 @@ def main(args=None):
         "--tile-extension",
         default="tif",
         type=str,
-        help="Extension of tiles. Defaults to %(default)s.",
+        help="Extension of tiles. Defaults to %(default)s. Do not include a period before the extension.",
     )
     ap.add_argument(
         "--geojson-output",

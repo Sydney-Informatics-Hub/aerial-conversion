@@ -199,6 +199,11 @@ def main(args=None):
     log.info(f"{len(raster_file_list)} raster tiles created")
 
     # Create class_id for category mapping
+    # Check if the specified class column exists
+    #TODO: make less hacky
+    if args.class_column not in geojson.columns:
+        # If it doesn't exist, create a new column with the specified name and fill it with the string value of class-column argument
+        geojson[args.class_column] = args.class_column
     geojson["class_id"] = geojson[class_column].factorize()[0]
     categories_json = make_category_object(geojson, class_column, trim_class)
 

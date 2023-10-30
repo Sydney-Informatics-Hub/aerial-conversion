@@ -3,7 +3,6 @@
 import os
 import subprocess
 import argparse
-import shutil
 import json
 
 from pycocotools.coco import COCO

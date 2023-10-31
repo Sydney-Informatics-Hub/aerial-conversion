@@ -33,7 +33,7 @@ def main(args):
         # Check if the file is a GeoTIFF
         if raster_file.endswith(".tif"):
             # Get the file name without extension
-            file_name = os.path.splitext(raster_file)[0]
+            file_name = os.path.splitext(raster_file)[0].split("_")[0]
 
             # Construct the vector file name
             vector_file = file_name + args.pattern + ".geojson"

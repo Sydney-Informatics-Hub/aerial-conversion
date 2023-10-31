@@ -92,7 +92,7 @@ def main(args):
                     subprocess.run(command, capture_output=True, text=True, check=True)
                 except subprocess.CalledProcessError as e:
                     print(f"Error processing {vector_file}: {e.stderr}")
-                    error[vector_file] = e.stderr
+                    error[file_name] = e.stderr
 
                 # Add the generated COCO dataset to the list
                 individual_coco_datasets.append(json_file)
@@ -103,6 +103,7 @@ def main(args):
 
     # Save the error as csv as well using pandas pd
     df = pd.DataFrame.from_dict(error, orient="index")
+    df.columns = ["error_message"]
     df.to_csv(os.path.join(output_dir, "error.csv"))
 
     # Generate markdown output for individual COCO datasets

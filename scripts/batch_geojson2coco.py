@@ -36,7 +36,7 @@ def main(args):
             file_name = os.path.splitext(raster_file)[0]
 
             # Construct the vector file name
-            vector_file = file_name + ".geojson"
+            vector_file = file_name + args.pattern + ".geojson"
             vector_path = os.path.join(args.vector_dir, vector_file)
 
             # Check if the vector file exists
@@ -150,6 +150,11 @@ if __name__ == "__main__":
         "--overlap",
         default=0,
         help="Overlap between tiles in percentage. Defaults to 0.",
+    )
+    parser.add_argument(
+        "--pattern",
+        default="",
+        help="Pattern to match the vector file name. Defaults to _building.",
     )
     parser.add_argument(
         "--concatenate",

@@ -10,6 +10,8 @@ import subprocess
 import pandas as pd
 from pycocotools.coco import COCO
 
+# from subprocess import Popen
+
 
 def resume(output_dir: str) -> list:
     """Resume a batch job from an output directory.
@@ -34,21 +36,7 @@ def resume(output_dir: str) -> list:
     return processed
 
 
-def main(args):
-    """Convert raster and vector pairs to COCO JSON format.
-
-    Args:
-        args: Command-line arguments.
-
-    Usage Example:
-        # Convert raster and vector pairs without concatenation
-        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir
-
-        # Convert raster and vector pairs with concatenation
-        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
-    """
-
-    # Specify the output directory
+def process_single(args):
     output_dir = args.output_dir
 
     individual_coco_datasets = []  # List to store individual COCO datasets
@@ -125,6 +113,13 @@ def main(args):
                     print(f"Error processing {vector_file}: {e.stderr}")
                     error[file_name] = e.stderr
 
+                    # Save the error as csv as well using pandas pd
+                    df_errors = pd.DataFrame.from_dict(
+                        {file_name: e.stderr}, orient="index"
+                    )
+                    df_errors.columns = ["error_message"]
+                    df_errors.to_csv(os.path.join(output_dir, "error.csv"), mode="a")
+
                 # Add the generated COCO dataset to the list
                 individual_coco_datasets.append(json_file)
 
@@ -132,10 +127,28 @@ def main(args):
     with open(os.path.join(output_dir, "error.pkl"), "wb") as f:
         pickle.dump(error, f)
 
-    # Save the error as csv as well using pandas pd
-    df = pd.DataFrame.from_dict(error, orient="index")
-    df.columns = ["error_message"]
-    df.to_csv(os.path.join(output_dir, "error.csv"), mode="a")
+    return individual_coco_datasets
+
+
+def main(args):
+    """Convert raster and vector pairs to COCO JSON format.
+
+    Args:
+        args: Command-line arguments.
+
+    Usage Example:
+        # Convert raster and vector pairs without concatenation
+        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir
+
+        # Convert raster and vector pairs with concatenation
+        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
+    """
+
+    # Specify the output directory
+    if args.no_workers > 1:
+        raise NotImplementedError("Parallel processing not implemented yet.")
+    else:
+        individual_coco_datasets = process_single(args)
 
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")
@@ -187,7 +200,7 @@ if __name__ == "__main__":
         "--tile-size", type=int, default=100, help="Tile width/height in meters."
     )
     parser.add_argument(
-        "--class-column", default="trees", help="Column name in GeoJSON for classes."
+        "--class-column", required=True, help="Column name in GeoJSON for classes."
     )
     parser.add_argument(
         "--overlap",
@@ -212,6 +225,12 @@ if __name__ == "__main__":
         "--resume",
         action="store_true",
         help="Resume a batch job from an output directory.",
+    )
+    parser.add_argument(
+        "--no-workers",
+        type=int,
+        default=1,
+        help="Number of workers to use for parallel processing.",
     )
 
     args = parser.parse_args()

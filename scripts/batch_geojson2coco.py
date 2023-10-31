@@ -11,6 +11,29 @@ import pandas as pd
 from pycocotools.coco import COCO
 
 
+def resume(output_dir: str) -> list:
+    """Resume a batch job from an output directory.
+
+    Check for the directories that are already processed, and check if they have a .json in them, then record them as already processed.
+
+    Args:
+        output_dir (str): Path to the output directory.
+
+    Returns:
+        list: List of raster files that are already processed.
+    """
+
+    processed = []
+    for sub_dir in os.listdir(output_dir):
+        # Check for all subdirs
+        if os.path.isdir(os.path.join(output_dir, sub_dir)):
+            # Check if they have a .json file in them
+            if os.path.exists(os.path.join(output_dir, sub_dir, "coco_from_gis.json")):
+                processed.append(sub_dir)
+
+    return processed
+
+
 def main(args):
     """Convert raster and vector pairs to COCO JSON format.
 
@@ -30,13 +53,21 @@ def main(args):
 
     individual_coco_datasets = []  # List to store individual COCO datasets
     error = {}
+    if args.resume:
+        already_processed = resume(output_dir)
+        print(f"Resuming from {len(already_processed)} already processed files.")
+    else:
+        already_processed = []
+
     # Iterate over the raster directory
     for raster_file in os.listdir(args.raster_dir):
         # Check if the file is a GeoTIFF
         if raster_file.endswith(".tif"):
             # Get the file name without extension
             file_name = os.path.splitext(raster_file)[0].split("_")[0]
-
+            if file_name in already_processed:
+                print(f"Skipping {file_name} as it is already processed.")
+                continue
             # Construct the vector file name
             vector_file = file_name + args.pattern + ".geojson"
             vector_path = os.path.join(args.vector_dir, vector_file)
@@ -176,6 +207,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--info",
         help="Path to the info JSON file. Either leave empty, or put a folder path., containing info.json for each raster, with the same names as the rasters.",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume a batch job from an output directory.",
     )
 
     args = parser.parse_args()

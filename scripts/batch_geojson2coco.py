@@ -135,7 +135,7 @@ def main(args):
     # Save the error as csv as well using pandas pd
     df = pd.DataFrame.from_dict(error, orient="index")
     df.columns = ["error_message"]
-    df.to_csv(os.path.join(output_dir, "error.csv"))
+    df.to_csv(os.path.join(output_dir, "error.csv"), mode="a")
 
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")

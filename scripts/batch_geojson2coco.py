@@ -4,6 +4,7 @@ a series of COCO datasets."""
 import argparse
 import json
 import os
+import pickle
 import subprocess
 
 from pycocotools.coco import COCO
@@ -27,7 +28,7 @@ def main(args):
     output_dir = args.output_dir
 
     individual_coco_datasets = []  # List to store individual COCO datasets
-
+    error = {}
     # Iterate over the raster directory
     for raster_file in os.listdir(args.raster_dir):
         # Check if the file is a GeoTIFF
@@ -90,9 +91,14 @@ def main(args):
                     subprocess.run(command, capture_output=True, text=True, check=True)
                 except subprocess.CalledProcessError as e:
                     print(f"Error processing {vector_file}: {e.stderr}")
+                    error[vector_file] = e.stderr
 
                 # Add the generated COCO dataset to the list
                 individual_coco_datasets.append(json_file)
+
+    # Save the error dict
+    with open(os.path.join(output_dir, "error.pkl"), "wb") as f:
+        pickle.dump(error, f)
 
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")

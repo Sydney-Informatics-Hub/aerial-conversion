@@ -7,6 +7,7 @@ import os
 import pickle
 import subprocess
 
+import pandas as pd
 from pycocotools.coco import COCO
 
 
@@ -99,6 +100,10 @@ def main(args):
     # Save the error dict
     with open(os.path.join(output_dir, "error.pkl"), "wb") as f:
         pickle.dump(error, f)
+
+    # Save the error as csv as well using pandas pd
+    df = pd.DataFrame.from_dict(error, orient="index")
+    df.to_csv(os.path.join(output_dir, "error.csv"))
 
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")

@@ -56,6 +56,9 @@ def main(args):
                 else:
                     info_file = os.path.join(args.info, f"{file_name}.json")
 
+                # Specify the overlap
+                overlap = args.overlap
+
                 print(
                     f"Processing {vector_file} | {raster_file} | {info_file} > > > > {json_file}"
                 )
@@ -72,6 +75,8 @@ def main(args):
                     pair_output_dir,
                     "--json-name",
                     json_file,
+                    "--offset",
+                    overlap,
                     "--info",
                     info_file,
                     "--tile-size",
@@ -140,6 +145,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--class-column", default="trees", help="Column name in GeoJSON for classes."
+    )
+    parser.add_argument(
+        "--overlap",
+        default=0,
+        help="Overlap between tiles in percentage. Defaults to 0.",
     )
     parser.add_argument(
         "--concatenate",

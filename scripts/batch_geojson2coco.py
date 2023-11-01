@@ -9,6 +9,7 @@ import subprocess
 
 import pandas as pd
 from pycocotools.coco import COCO
+from tqdm import tqdm
 
 # from subprocess import Popen
 
@@ -169,7 +170,11 @@ def main(args):
     if args.concatenate:
         concatenated_coco = COCO()  # Create a new COCO dataset
         concatenated_coco.dataset = {"images": [], "annotations": [], "categories": []}
-        for coco_file in individual_coco_datasets:
+
+        image_index_checkpoint = 0
+        for coco_file in tqdm(individual_coco_datasets):
+            image_index_map = {}
+
             try:
                 with open(coco_file, "r") as f:
                     dataset = json.load(f)
@@ -178,16 +183,29 @@ def main(args):
                 continue
 
             if len(dataset["images"]) > 1:
-                raise NotImplementedError(
-                    "Concatenation of multiple images not implemented yet."
-                )
+                print(f"Warning: {coco_file} has more than one image.")
+                for image_no, _ in enumerate(dataset["images"]):
+                    dataset["images"][image_no]["file_name"] = os.path.join(
+                        coco_file, dataset["images"][image_no]["file_name"]
+                    )
+                    dataset["images"][image_no]["id"] = image_index_checkpoint
+
+                    image_index_map[
+                        dataset["images"][image_no]["id"]
+                    ] = image_index_checkpoint
+                    image_index_checkpoint += 1
+
+                for annotation_no, _ in enumerate(dataset["annotations"]):
+                    dataset["annotations"][annotation_no]["id"] = image_index_map[
+                        dataset["annotations"][annotation_no]["id"]
+                    ]
 
             dataset["images"][0]["file_name"] = os.path.join(
                 coco_file, dataset["images"][0]["file_name"]
             )
             dataset["images"][0]["id"] = coco_file
             new_annotations = []
-            for annotation in dataset["annotations"]:
+            for annotation_no, annotation in enumerate(dataset["annotations"]):
                 annotation["id"] = coco_file
                 new_annotations.append(annotation)
             dataset["annotations"] = new_annotations

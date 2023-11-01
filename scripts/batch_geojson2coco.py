@@ -55,6 +55,10 @@ def process_single(args):
             file_name = os.path.splitext(raster_file)[0].split("_")[0]
             if file_name in already_processed:
                 print(f"Skipping {file_name} as it is already processed.")
+                # add the json file to the list
+                individual_coco_datasets.append(
+                    os.path.join(output_dir, file_name, "coco_from_gis.json")
+                )
                 continue
             # Construct the vector file name
             vector_file = file_name + args.pattern + ".geojson"

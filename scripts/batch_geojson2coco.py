@@ -165,9 +165,13 @@ def main(args):
     if args.concatenate:
         concatenated_coco = COCO()  # Create a new COCO dataset
         for coco_file in individual_coco_datasets:
-            with open(coco_file, "r") as f:
-                dataset = json.load(f)
-                concatenated_coco.dataset.update(dataset)
+            try:
+                with open(coco_file, "r") as f:
+                    dataset = json.load(f)
+                    concatenated_coco.dataset.update(dataset)
+            except FileNotFoundError as e:
+                print(f"Error processing {coco_file}: {e}")
+                continue
 
         # Specify the output directory for the concatenated dataset
         concatenated_output_dir = os.path.join(args.output_dir, "concatenated")

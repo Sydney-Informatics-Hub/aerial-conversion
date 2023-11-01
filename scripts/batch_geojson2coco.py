@@ -168,6 +168,7 @@ def main(args):
     # Concatenate COCO datasets if the --concatenate argument is enabled
     if args.concatenate:
         concatenated_coco = COCO()  # Create a new COCO dataset
+        concatenated_coco.dataset = {"images": [], "annotations": [], "categories": []}
         for coco_file in individual_coco_datasets:
             try:
                 with open(coco_file, "r") as f:
@@ -176,10 +177,15 @@ def main(args):
                 print(f"Error: {coco_file} not found.")
                 continue
 
-            dataset["images"]["file_name"] = os.path.join(
-                coco_file, dataset["images"]["file_name"]
+            if len(dataset["images"]) > 1:
+                raise NotImplementedError(
+                    "Concatenation of multiple images not implemented yet."
+                )
+
+            dataset["images"][0]["file_name"] = os.path.join(
+                coco_file, dataset["images"][0]["file_name"]
             )
-            dataset["images"]["id"] = coco_file
+            dataset["images"][0]["id"] = coco_file
             new_annotations = []
             for annotation in dataset["annotations"]:
                 annotation["id"] = coco_file
@@ -187,9 +193,9 @@ def main(args):
             dataset["annotations"] = new_annotations
 
             # Add the dataset to the concatenated COCO dataset
-            concatenated_coco["images"].extend(dataset["images"])
-            concatenated_coco["annotations"].extend(dataset["annotations"])
-            concatenated_coco["categories"].extend(dataset["categories"])
+            concatenated_coco.dataset["images"].extend(dataset["images"])
+            concatenated_coco.dataset["annotations"].extend(dataset["annotations"])
+            concatenated_coco.dataset["categories"].extend(dataset["categories"])
 
         # Specify the output directory for the concatenated dataset
         concatenated_output_dir = os.path.join(args.output_dir, "concatenated")
@@ -200,7 +206,7 @@ def main(args):
             concatenated_output_dir, "concatenated_coco.json"
         )
         with open(concatenated_json_file, "w") as f:
-            json.dump(concatenated_coco.dataset, f)
+            json.dump(concatenated_coco.dataset, f, indent=4)
 
         print(f"\nConcatenated COCO dataset saved to: {concatenated_json_file}")
 

@@ -183,6 +183,9 @@ def main(args):
                 continue
 
             if len(dataset["images"]) > 1:
+                raise NotImplementedError(
+                    "Concatenation of multiple images not implemented yet."
+                )
                 print(f"Warning: {coco_file} has more than one image.")
                 for image_no, _ in enumerate(dataset["images"]):
                     dataset["images"][image_no]["file_name"] = os.path.join(

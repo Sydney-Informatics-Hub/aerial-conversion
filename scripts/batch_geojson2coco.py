@@ -172,10 +172,24 @@ def main(args):
             try:
                 with open(coco_file, "r") as f:
                     dataset = json.load(f)
-                    concatenated_coco.dataset.update(dataset)
-            except FileNotFoundError as e:
-                print(f"Error processing {coco_file}: {e}")
+            except FileNotFoundError:
+                print(f"Error: {coco_file} not found.")
                 continue
+
+            dataset["images"]["file_name"] = os.path.join(
+                coco_file, dataset["images"]["file_name"]
+            )
+            dataset["images"]["id"] = coco_file
+            new_annotations = []
+            for annotation in dataset["annotations"]:
+                annotation["id"] = coco_file
+                new_annotations.append(annotation)
+            dataset["annotations"] = new_annotations
+
+            # Add the dataset to the concatenated COCO dataset
+            concatenated_coco["images"].extend(dataset["images"])
+            concatenated_coco["annotations"].extend(dataset["annotations"])
+            concatenated_coco["categories"].extend(dataset["categories"])
 
         # Specify the output directory for the concatenated dataset
         concatenated_output_dir = os.path.join(args.output_dir, "concatenated")

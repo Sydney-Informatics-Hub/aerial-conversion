@@ -182,36 +182,37 @@ def main(args):
                 print(f"Error: {coco_file} not found.")
                 continue
 
-            if len(dataset["images"]) > 1:
-                raise NotImplementedError(
-                    "Concatenation of multiple images not implemented yet."
+            # if len(dataset["images"]) > 1:
+            # raise NotImplementedError(
+            #     "Concatenation of multiple images not implemented yet."
+            # )
+            # print(f"Warning: {coco_file} has more than one image.")
+
+            for image_no, _ in enumerate(dataset["images"]):
+                dataset["images"][image_no]["file_name"] = os.path.join(
+                    coco_file, dataset["images"][image_no]["file_name"]
                 )
-                print(f"Warning: {coco_file} has more than one image.")
-                for image_no, _ in enumerate(dataset["images"]):
-                    dataset["images"][image_no]["file_name"] = os.path.join(
-                        coco_file, dataset["images"][image_no]["file_name"]
-                    )
-                    dataset["images"][image_no]["id"] = image_index_checkpoint
+                dataset["images"][image_no]["id"] = image_index_checkpoint
 
-                    image_index_map[
-                        dataset["images"][image_no]["id"]
-                    ] = image_index_checkpoint
-                    image_index_checkpoint += 1
+                image_index_map[
+                    dataset["images"][image_no]["id"]
+                ] = image_index_checkpoint
+                image_index_checkpoint += 1
 
-                for annotation_no, _ in enumerate(dataset["annotations"]):
-                    dataset["annotations"][annotation_no]["id"] = image_index_map[
-                        dataset["annotations"][annotation_no]["id"]
-                    ]
+            for annotation_no, _ in enumerate(dataset["annotations"]):
+                dataset["annotations"][annotation_no]["id"] = image_index_map[
+                    dataset["annotations"][annotation_no]["id"]
+                ]
 
-            dataset["images"][0]["file_name"] = os.path.join(
-                coco_file, dataset["images"][0]["file_name"]
-            )
-            dataset["images"][0]["id"] = coco_file
-            new_annotations = []
-            for annotation_no, annotation in enumerate(dataset["annotations"]):
-                annotation["id"] = coco_file
-                new_annotations.append(annotation)
-            dataset["annotations"] = new_annotations
+            # dataset["images"][0]["file_name"] = os.path.join(
+            #     coco_file, dataset["images"][0]["file_name"]
+            # )
+            # dataset["images"][0]["id"] = coco_file
+            # new_annotations = []
+            # for annotation_no, annotation in enumerate(dataset["annotations"]):
+            #     annotation["id"] = coco_file
+            #     new_annotations.append(annotation)
+            # dataset["annotations"] = new_annotations
 
             # Add the dataset to the concatenated COCO dataset
             concatenated_coco.dataset["images"].extend(dataset["images"])

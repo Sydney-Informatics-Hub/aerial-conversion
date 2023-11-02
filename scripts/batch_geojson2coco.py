@@ -197,9 +197,15 @@ def main(args):
                 image_index_map[
                     dataset["images"][image_no]["id"]
                 ] = image_index_checkpoint
+
+                print("image_id:", dataset["images"][image_no]["id"])
+
                 image_index_checkpoint += 1
 
+            print(f"image_index_map: {image_index_map}")
+
             for annotation_no, _ in enumerate(dataset["annotations"]):
+                print("annotation_id:", dataset["annotations"][annotation_no]["id"])
                 dataset["annotations"][annotation_no]["id"] = image_index_map[
                     dataset["annotations"][annotation_no]["id"]
                 ]

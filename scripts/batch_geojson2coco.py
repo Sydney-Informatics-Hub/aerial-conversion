@@ -169,7 +169,13 @@ def main(args):
     # Concatenate COCO datasets if the --concatenate argument is enabled
     if args.concatenate:
         concatenated_coco = COCO()  # Create a new COCO dataset
-        concatenated_coco.dataset = {"images": [], "annotations": [], "categories": []}
+        concatenated_coco.dataset = {
+            "images": [],
+            "annotations": [],
+            "categories": [],
+            "licenses": [],
+            "info": {},
+        }
 
         image_index_checkpoint = 0
         annot_index_checkpoint = 0
@@ -217,6 +223,15 @@ def main(args):
                     annotation_image_id
                 ]
                 dataset["annotations"][annotation_no]["id"] = annot_index_checkpoint
+
+                # make the segnmets list of lists if not already
+                if not isinstance(
+                    dataset["annotations"][annotation_no]["segmentation"][0], list
+                ):
+                    dataset["annotations"][annotation_no]["segmentation"] = [
+                        dataset["annotations"][annotation_no]["segmentation"]
+                    ]
+
                 annot_index_checkpoint += 1
 
             # dataset["images"][0]["file_name"] = os.path.join(
@@ -233,8 +248,17 @@ def main(args):
             concatenated_coco.dataset["images"].extend(dataset["images"])
             concatenated_coco.dataset["annotations"].extend(dataset["annotations"])
             concatenated_coco.dataset["categories"].extend(dataset["categories"])
-            concatenated_coco.dataset["info"].extend(dataset["info"])
-            concatenated_coco.dataset["licenses"].extend(dataset["licenses"])
+
+            try:
+                concatenated_coco.dataset["licenses"].extend(dataset["licenses"])
+            except KeyError:
+                pass
+
+            try:
+                concatenated_coco.dataset["info"].extend(dataset["info"])
+            except KeyError:
+                pass
+
             try:
                 concatenated_coco.dataset["type"] = dataset["type"]
             except KeyError:

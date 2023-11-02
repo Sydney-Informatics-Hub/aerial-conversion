@@ -172,9 +172,10 @@ def main(args):
         concatenated_coco.dataset = {"images": [], "annotations": [], "categories": []}
 
         image_index_checkpoint = 0
+        annot_index_checkpoint = 0
         for coco_file in tqdm(individual_coco_datasets):
             image_index_map = {}
-
+            # print("\n-----\n",image_index_map)
             try:
                 with open(coco_file, "r") as f:
                     dataset = json.load(f)
@@ -188,27 +189,35 @@ def main(args):
             # )
             # print(f"Warning: {coco_file} has more than one image.")
 
+            pair_dir = os.path.dirname(coco_file)
+            raster_name = os.path.basename(pair_dir)
+
             for image_no, _ in enumerate(dataset["images"]):
                 dataset["images"][image_no]["file_name"] = os.path.join(
-                    coco_file, dataset["images"][image_no]["file_name"]
+                    raster_name, dataset["images"][image_no]["file_name"]
                 )
-                dataset["images"][image_no]["id"] = image_index_checkpoint
 
                 image_index_map[
                     dataset["images"][image_no]["id"]
                 ] = image_index_checkpoint
 
-                print("image_id:", dataset["images"][image_no]["id"])
+                dataset["images"][image_no]["id"] = image_index_checkpoint
+
+                # print("image_id:",dataset["images"][image_no]["id"])
 
                 image_index_checkpoint += 1
 
-            print(f"image_index_map: {image_index_map}")
-
+            # print(f"image_index_map: {image_index_map}")
+            # print(dataset["annotations"])
             for annotation_no, _ in enumerate(dataset["annotations"]):
-                print("annotation_id:", dataset["annotations"][annotation_no]["id"])
-                dataset["annotations"][annotation_no]["id"] = image_index_map[
-                    dataset["annotations"][annotation_no]["id"]
+                # print("annotation_id:",dataset["annotations"][annotation_no]["id"])
+                annotation_image_id = dataset["annotations"][annotation_no]["image_id"]
+                # print("annotation_image_id:",annotation_image_id)
+                dataset["annotations"][annotation_no]["image_id"] = image_index_map[
+                    annotation_image_id
                 ]
+                dataset["annotations"][annotation_no]["id"] = annot_index_checkpoint
+                annot_index_checkpoint += 1
 
             # dataset["images"][0]["file_name"] = os.path.join(
             #     coco_file, dataset["images"][0]["file_name"]

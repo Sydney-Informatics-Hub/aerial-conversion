@@ -233,6 +233,12 @@ def main(args):
             concatenated_coco.dataset["images"].extend(dataset["images"])
             concatenated_coco.dataset["annotations"].extend(dataset["annotations"])
             concatenated_coco.dataset["categories"].extend(dataset["categories"])
+            concatenated_coco.dataset["info"].extend(dataset["info"])
+            concatenated_coco.dataset["licenses"].extend(dataset["licenses"])
+            try:
+                concatenated_coco.dataset["type"] = dataset["type"]
+            except KeyError:
+                pass
 
         # Specify the output directory for the concatenated dataset
         concatenated_output_dir = os.path.join(args.output_dir, "concatenated")

@@ -249,7 +249,7 @@ def main(args):
             concatenated_output_dir, "concatenated_coco.json"
         )
         with open(concatenated_json_file, "w") as f:
-            json.dump(concatenated_coco.dataset, f, indent=4)
+            json.dump(concatenated_coco.dataset, f, indent=2)
 
         print(f"\nConcatenated COCO dataset saved to: {concatenated_json_file}")
 

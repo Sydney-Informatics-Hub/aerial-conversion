@@ -247,7 +247,16 @@ def main(args):
             # Add the dataset to the concatenated COCO dataset
             concatenated_coco.dataset["images"].extend(dataset["images"])
             concatenated_coco.dataset["annotations"].extend(dataset["annotations"])
-            concatenated_coco.dataset["categories"].extend(dataset["categories"])
+
+            # Add the categories to the concatenated COCO dataset if dataset["categories"]["id"] are not already in the concatenated_coco.dataset["categories"]["id"]
+            for category in dataset["categories"]:
+                if category["id"] not in [
+                    category["id"]
+                    for category in concatenated_coco.dataset["categories"]
+                ]:
+                    concatenated_coco.dataset["categories"].extend(
+                        dataset["categories"]
+                    )
 
             try:
                 concatenated_coco.dataset["licenses"].extend(dataset["licenses"])

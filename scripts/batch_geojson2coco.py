@@ -255,7 +255,7 @@ def main(args):
                 pass
 
             try:
-                concatenated_coco.dataset["info"].extend(dataset["info"])
+                concatenated_coco.dataset["info"] = dataset["info"]
             except KeyError:
                 pass
 

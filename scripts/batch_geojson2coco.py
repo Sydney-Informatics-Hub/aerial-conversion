@@ -207,14 +207,27 @@ def main(args):
                 dataset["images"][image_no]["id"] = image_index_checkpoint
                 image_index_checkpoint += 1
 
-            for category_no, _ in enumerate(dataset["categories"]):
-                category_index_map[
-                    dataset["categories"][category_no]["id"]
-                ] = category_index_checkpoint
+            for _, dataset_category in enumerate(dataset["categories"]):
+                old_id = dataset_category["id"]
 
-                dataset["categories"][category_no]["id"] = category_index_checkpoint
+                if dataset_category["name"] not in [
+                    category["name"]
+                    for category in concatenated_coco.dataset["categories"]
+                ]:
+                    dataset_category["id"] = category_index_checkpoint
+                    concatenated_coco.dataset["categories"].append(dataset_category)
+                    category_index_map[old_id] = category_index_checkpoint
+                    category_index_checkpoint += 1
 
-                category_index_checkpoint += 1
+                else:
+                    # find the existing mapping id
+                    existing_mapping_id = None
+                    for category in concatenated_coco.dataset["categories"]:
+                        if category["name"] == dataset_category["name"]:
+                            existing_mapping_id = category["id"]
+                            break
+                    dataset_category["id"] = existing_mapping_id
+                    category_index_map[old_id] = existing_mapping_id
 
             for annotation_no, _ in enumerate(dataset["annotations"]):
                 annotation_image_id = dataset["annotations"][annotation_no]["image_id"]
@@ -250,8 +263,7 @@ def main(args):
                     category["id"]
                     for category in concatenated_coco.dataset["categories"]
                 ]:
-                    concatenated_coco.dataset["categories"] = category
-
+                    concatenated_coco.dataset["categories"].append(category)
             try:
                 concatenated_coco.dataset["licenses"].extend(dataset["licenses"])
             except KeyError:

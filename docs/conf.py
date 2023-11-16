@@ -23,9 +23,9 @@ project = "Aerial Conversion"
 copyright = "2023, Sydney Informatics Hub (SIH)"
 author = "SIH"
 
-version = "v1.1.0"
+version = "v1.2.0"
 # The full version, including alpha/beta/rc tags
-release = "v1.1.0"
+release = "v1.2.0"
 
 
 # -- General configuration ---------------------------------------------------

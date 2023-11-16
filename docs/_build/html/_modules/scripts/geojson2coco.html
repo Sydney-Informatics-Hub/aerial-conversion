@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scripts.geojson2coco &mdash; Aerial Conversion v1.1.0 documentation</title>
+  <title>scripts.geojson2coco &mdash; Aerial Conversion v1.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -32,7 +32,7 @@
             Aerial Conversion
           </a>
               <div class="version">
-                v1.1.0
+                v1.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -275,6 +275,11 @@
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">raster_file_list</span><span class="p">)</span><span class="si">}</span><span class="s2"> raster tiles created&quot;</span><span class="p">)</span>
 
     <span class="c1"># Create class_id for category mapping</span>
+    <span class="c1"># Check if the specified class column exists</span>
+    <span class="c1">#TODO: make less hacky</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geojson</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="c1"># If it doesn&#39;t exist, create a new column with the specified name and fill it with the string value of class-column argument</span>
+        <span class="n">geojson</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">class_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span>
     <span class="n">geojson</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span><span class="o">.</span><span class="n">factorize</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">categories_json</span> <span class="o">=</span> <span class="n">make_category_object</span><span class="p">(</span><span class="n">geojson</span><span class="p">,</span> <span class="n">class_column</span><span class="p">,</span> <span class="n">trim_class</span><span class="p">)</span>
 

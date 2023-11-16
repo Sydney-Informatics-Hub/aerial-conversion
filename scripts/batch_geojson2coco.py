@@ -310,7 +310,9 @@ if __name__ == "__main__":
         "--tile-size", type=int, default=100, help="Tile width/height in meters."
     )
     parser.add_argument(
-        "--class-column", required=True, help="Column name in GeoJSON for classes."
+        "--class-column",
+        required=True,
+        help="Column name in GeoJSON for classes. Should always be provided. If the column does not exist, will create a new column with the name provided.",
     )
     parser.add_argument(
         "--overlap",

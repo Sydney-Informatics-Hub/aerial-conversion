@@ -154,9 +154,10 @@
 <div class="viewcode-block" id="pixel_to_spatial_rio">
 <a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.coordinates.pixel_to_spatial_rio">[docs]</a>
 <span class="k">def</span> <span class="nf">pixel_to_spatial_rio</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="n">row_index</span><span class="p">,</span> <span class="n">col_index</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts pixel coordinates to spatial coordinates using rasterio.</span>
-<span class="sd">        More information here: https://stackoverflow.com/questions/52443906/pixel-array-position-to-lat-long-gdal-python</span>
-<span class="sd">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts pixel coordinates to spatial coordinates using rasterio. More</span>
+<span class="sd">    information here: https://stackoverflow.com/questions/52443906/pixel-array-</span>
+<span class="sd">    position-to-lat-long-gdal-python.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        geotiff (rio.DatasetReader): Rasterio raster object (do not read, just open via rasterio.open(raster_path))</span>
 <span class="sd">        row_index (int): pixel row</span>
@@ -288,7 +289,7 @@
     <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Filter out zero area polygons by re-projecting to the best UTM CRS for area calculation</span>
-    <span class="n">target_crs</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span>
+    <span class="n">target_crs</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">estimate_utm_crs</span><span class="p">()</span>
     <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">target_crs</span><span class="p">)</span>
     <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="p">[</span><span class="n">tile_polygons</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">area</span> <span class="o">&gt;</span> <span class="nb">filter</span><span class="p">]</span>
     <span class="n">tile_polygons</span> <span class="o">=</span> <span class="n">tile_polygons</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">geojson</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>

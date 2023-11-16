@@ -177,6 +177,50 @@ input raster, use the following command:</p>
                 <span class="o">--</span><span class="n">minimum</span><span class="o">-</span><span class="n">rotated</span><span class="o">-</span><span class="n">rectangle</span>
 </pre></div>
 </div>
+<p>To do a batch conversion, when the conversion should be carried on
+multiple input images, use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">batch_coco2geojson</span><span class="o">.</span><span class="n">py</span> \
+                <span class="o">--</span><span class="n">raster</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">rasters</span><span class="o">/</span> \
+                <span class="o">--</span><span class="n">vector</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">geojsons</span><span class="o">/</span> \
+                <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">outputs</span><span class="o">/</span> \
+                <span class="o">--</span><span class="n">tile</span><span class="o">-</span><span class="n">size</span> <span class="o">&lt;</span><span class="n">size_of_the_tiles</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">class</span><span class="o">-</span><span class="n">column</span> <span class="o">&lt;</span><span class="n">class_column_in_geojsons_to_look_for</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">overlap</span> <span class="o">&lt;</span><span class="n">overlap_in_percentage_between_tiles</span><span class="o">&gt;</span> \
+                <span class="o">--</span><span class="n">pattern</span> <span class="o">&lt;</span><span class="n">a_pattern_to_ensure_raster_names_matches_the_geojsons</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">concatenate</span> <span class="o">&lt;</span><span class="n">whether_to_concatenate_the_output_geojsons_into_one_big_json</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">info</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">json</span> \
+                <span class="o">--</span><span class="n">resume</span> <span class="o">&lt;</span><span class="n">whether_to_resume_the_process_in_case_new_images_are_added</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--raster-dir</span></code> argument is the path to the raster directory. This is a
+necessary argument. Rasters are expected to be in this directory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--vector-dir</span></code> argument is the path to the vector directory. This is a
+necessary argument. geojsons are expected to be in this directory, with
+matching names with the rasters.</p>
+<p>Please ensure the rasters in the raster directory are named similarly as
+the geojsons. If they only differ in a prefix, you can use the
+<code class="docutils literal notranslate"><span class="pre">--pattern</span></code> argument to specify the prefix. For example, if the
+rasters are named <code class="docutils literal notranslate"><span class="pre">osm_1.tif</span></code>, <code class="docutils literal notranslate"><span class="pre">osm_2.tif</span></code>, and the geojsons are
+named <code class="docutils literal notranslate"><span class="pre">1.geojson</span></code>, <code class="docutils literal notranslate"><span class="pre">2.geojson</span></code>, you can use <code class="docutils literal notranslate"><span class="pre">--pattern</span> <span class="pre">osm_</span></code> to
+ensure the rasters are matched with the geojsons.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--output-dir</span></code> argument is the path to the output directory. This is a
+necessary argument.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--class-column</span></code> argument is also a necessary argument that should be
+provided. If the provided argument is wrong or does not exist, the code
+will create the column with default values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--overlap</span></code> argument is the percentage of overlap between the tiles.
+For example, if the tile size is 200, and the overlap is 0.5, the
+overlap between the tiles will be 100 pixels.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--concatenate</span></code> argument is a store-true argument. If it is set, the
+output geojsons will be concatenated into one big geojson.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--resume</span></code> argument is a store-true argument. If it is set, the code
+will resume the process from the last image that was processed. This is
+useful when new images are added to the raster directory, and the
+process should be resumed from the last image that was processed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--info</span></code> argument is the path to the info json file. This is a
+necessary argument. If the argument is not provided, the code will
+create the info json file with default values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--tile-size</span></code> argument is the size of the tiles in meters.</p>
 </section>
 <hr class="docutils" />
 <section id="contributing-to-the-project">

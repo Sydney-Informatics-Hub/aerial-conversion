@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>scripts.coco2geojson &mdash; Aerial Conversion v1.1.0 documentation</title>
+  <title>scripts.coco2geojson &mdash; Aerial Conversion v1.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -32,7 +32,7 @@
             Aerial Conversion
           </a>
               <div class="version">
-                v1.1.0
+                v1.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -70,7 +70,8 @@
              
   <h1>Source code for scripts.coco2geojson</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;This script supports converting a COCO dataset into a georeferenced geojson file.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;This script supports converting a COCO dataset into a georeferenced geojson</span>
+<span class="sd">file.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 
 <span class="c1"># import glob</span>
@@ -278,7 +279,7 @@
         <span class="s2">&quot;--tile-extension&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;tif&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Extension of tiles. Defaults to </span><span class="si">%(default)s</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Extension of tiles. Defaults to </span><span class="si">%(default)s</span><span class="s2">. Do not include a period before the extension.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--geojson-output&quot;</span><span class="p">,</span>

@@ -24,7 +24,7 @@ Table of contetns
 
 -  `Input and Output Data Formats <#input-and-output-data-formats>`__
 
--  `Setup <#usage>`__
+-  `Setup <#setup>`__
 
 -  `Dataset <#dataset>`__
 

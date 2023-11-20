@@ -12,7 +12,7 @@ authors = [
 ]
 description = "Data interchange utilities for going from geospatial data formats to computer vision formats and back"
 readme = "README.md"
-version = "1.2.0""
+version = "1.2.0"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent"

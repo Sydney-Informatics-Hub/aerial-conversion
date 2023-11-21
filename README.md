@@ -18,11 +18,11 @@ The repository can convert between the following formats:
 ## Setup
 
 ```
-conda create -n aerial-conversion-dev python==3.9
+conda create -n aerial-conversion-dev python=3.9
 
 conda activate aerial-conversion-dev
 
-pip install -r requirements.txt
+pip install 'git+https://github.com/Sydney-Informatics-Hub/aerial-conversion.git'
 ```
 
 

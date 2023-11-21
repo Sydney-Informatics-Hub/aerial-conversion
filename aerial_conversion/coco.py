@@ -10,6 +10,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio as rio
+from orthogonalise.orthogonalise import orthogonalise_polygon
 from PIL import Image
 from shapely.geometry import Polygon
 
@@ -406,14 +407,20 @@ def coco_categories_dict(coco_json: str):
 
 
 def polygon_prep(
-    polygon, simplify_tolerance: float = 0.0, minimum_rotated_rectangle: bool = False
+    polygon,
+    simplify_tolerance: float = 0.0,
+    minimum_rotated_rectangle: bool = False,
+    orthogonalise: bool = False,
 ):
     """Prepares a polygon for export.
+
+    Orthoginalisation is based on the orthogonalisation script version 1.0.4 written by Martin Machyna. Full credits at orthogoalise submodule.
 
     Args:
         polygon (list): A list of coordinates
         simplify_tolerance (float, optional): Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0. Defaults to 0.0. If simplify_tolerance > 0, will simplify the polygon, without minimum rotated rectangle.
         minimum_rotated_rectangle (bool, optional): If true, will return the minimum rotated rectangle of the polygon. Defaults to False. If simplify_tolerance > 0, will simplify the polygon without minimum rotated rectangle.
+        orthogonalise (bool, optional): If true, will return the orthogonalised polygon. Defaults to False. If simplify_tolerance > 0, will simplify the polygon without minimum rotated rectangle.
 
     Returns:
         polygon (list): A list of coordinates
@@ -428,6 +435,8 @@ def polygon_prep(
         polygon = polygon.minimum_rotated_rectangle
     elif simplify_tolerance > 0:
         polygon = polygon.simplify(simplify_tolerance)
+        if orthogonalise:
+            polygon = orthogonalise_polygon(polygon)
     polygon = np.array(polygon.exterior.coords)
 
     return polygon

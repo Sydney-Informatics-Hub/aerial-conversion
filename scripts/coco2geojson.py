@@ -154,20 +154,26 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
     return polygons_df
 
 
-def shape_regulariser(polygon, simplify_tolerance, minimum_rotated_rectangle):
+def shape_regulariser(
+    polygon, simplify_tolerance, minimum_rotated_rectangle, orthogonalise
+):
     """Regularise the shape of a polygon.
 
     Args:
         polygon (shapely.geometry.Polygon): Polygon to regularise
         simplify_tolerance (float): Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0.
         minimum_rotated_rectangle (bool): If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.
+        orthogonalise (bool): If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification.
 
     Returns:
         shapely.geometry.Polygon: Regularised polygon
     """
     polygon_point_tuples = list(polygon.exterior.coords)
     polygon = polygon_prep(
-        polygon_point_tuples, simplify_tolerance, minimum_rotated_rectangle
+        polygon_point_tuples,
+        simplify_tolerance,
+        minimum_rotated_rectangle,
+        orthogonalise,
     )
     polygon = Polygon(polygon)
 
@@ -224,13 +230,18 @@ def main(args=None):
     ap.add_argument(
         "--simplify-tolerance",
         type=float,
-        default=0.7,
+        default=0.9,
         help="Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0. Defaults to %(default)s.",
     )
     ap.add_argument(
         "--minimum-rotated-rectangle",
         action=argparse.BooleanOptionalAction,
         help="If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.",
+    )
+    ap.add_argument(
+        "--orthogonalise",
+        action=argparse.BooleanOptionalAction,
+        help="If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification. You can manually set a simplification tolerance, but a default value will be used if not set.",
     )
     ap.add_argument(
         "--meta-name",
@@ -273,6 +284,8 @@ def main(args=None):
     tile_extension = args.tile_extension
     simplify_tolerance = args.simplify_tolerance
     minimum_rotated_rectangle = args.minimum_rotated_rectangle
+    orthogonalise = args.orthogonalise
+
     # keep_geom_type = (
     #     not args.not_keep_geom_type
     # )  # should be True # only meaningful when using geopandas overlay method
@@ -325,7 +338,9 @@ def main(args=None):
 
     # print(polygons_df)
     polygons_df["geometry"] = polygons_df["geometry"].apply(
-        lambda x: shape_regulariser(x, simplify_tolerance, minimum_rotated_rectangle)
+        lambda x: shape_regulariser(
+            x, simplify_tolerance, minimum_rotated_rectangle, orthogonalise
+        )
     )
 
     # print(polygons_df)

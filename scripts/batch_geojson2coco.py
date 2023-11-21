@@ -135,7 +135,8 @@ def process_single(args):
     return individual_coco_datasets
 
 
-def main(args):
+
+def main(args=None):
     """Convert raster and vector pairs to COCO JSON format.
 
     Args:
@@ -148,6 +149,59 @@ def main(args):
         # Convert raster and vector pairs with concatenation
         python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
     """
+
+    parser = argparse.ArgumentParser(
+        description="Convert raster and vector pairs to COCO JSON format."
+    )
+    parser.add_argument(
+        "--raster-dir", required=True, help="Path to the raster directory."
+    )
+    parser.add_argument(
+        "--vector-dir", required=True, help="Path to the vector directory."
+    )
+    parser.add_argument(
+        "--output-dir", required=True, help="Path to the output directory."
+    )
+    parser.add_argument(
+        "--tile-size", type=int, default=100, help="Tile width/height in meters."
+    )
+    parser.add_argument(
+        "--class-column",
+        required=True,
+        help="Column name in GeoJSON for classes. Should always be provided. If the column does not exist, will create a new column with the name provided.",
+    )
+    parser.add_argument(
+        "--overlap",
+        default=0,
+        help="Overlap between tiles in percentage. Defaults to 0.",
+    )
+    parser.add_argument(
+        "--pattern",
+        default="",
+        help="Pattern to match the vector file name. Defaults to _building.",
+    )
+    parser.add_argument(
+        "--concatenate",
+        action="store_true",
+        help="Concatenate individual COCO datasets into one.",
+    )
+    parser.add_argument(
+        "--info",
+        help="Path to the info JSON file. Either leave empty, or put a folder path., containing info.json for each raster, with the same names as the rasters.",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume a batch job from an output directory.",
+    )
+    parser.add_argument(
+        "--no-workers",
+        type=int,
+        default=1,
+        help="Number of workers to use for parallel processing.",
+    )
+
+    args = parser.parse_args(args)
 
     # Specify the output directory
     if args.no_workers > 1:
@@ -294,56 +348,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Convert raster and vector pairs to COCO JSON format."
-    )
-    parser.add_argument(
-        "--raster-dir", required=True, help="Path to the raster directory."
-    )
-    parser.add_argument(
-        "--vector-dir", required=True, help="Path to the vector directory."
-    )
-    parser.add_argument(
-        "--output-dir", required=True, help="Path to the output directory."
-    )
-    parser.add_argument(
-        "--tile-size", type=int, default=100, help="Tile width/height in meters."
-    )
-    parser.add_argument(
-        "--class-column",
-        required=True,
-        help="Column name in GeoJSON for classes. Should always be provided. If the column does not exist, will create a new column with the name provided.",
-    )
-    parser.add_argument(
-        "--overlap",
-        default=0,
-        help="Overlap between tiles in percentage. Defaults to 0.",
-    )
-    parser.add_argument(
-        "--pattern",
-        default="",
-        help="Pattern to match the vector file name. Defaults to _building.",
-    )
-    parser.add_argument(
-        "--concatenate",
-        action="store_true",
-        help="Concatenate individual COCO datasets into one.",
-    )
-    parser.add_argument(
-        "--info",
-        help="Path to the info JSON file. Either leave empty, or put a folder path., containing info.json for each raster, with the same names as the rasters.",
-    )
-    parser.add_argument(
-        "--resume",
-        action="store_true",
-        help="Resume a batch job from an output directory.",
-    )
-    parser.add_argument(
-        "--no-workers",
-        type=int,
-        default=1,
-        help="Number of workers to use for parallel processing.",
-    )
-
-    args = parser.parse_args()
-    main(args)
+    main()

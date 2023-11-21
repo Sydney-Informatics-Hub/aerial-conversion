@@ -74,7 +74,7 @@ To create tiles from a raster file, use the following command:
 
 
 ```
-python geojson2coco.py \
+python -m aerial_conversion.scripts.geojson2coco \
                 --raster-file /path/to/data/chatswood_hd.tif \
                 --polygon-file /path/to/data/chatswood.geojson \
                 --tile-dir /path/to/data/big_tiles \
@@ -86,7 +86,7 @@ python geojson2coco.py \
 To merge multiple COCO JSON files, and yield a geojson file for the input raster, use the following command:
 
 ```
-python coco2geojson.py \
+python -m aerial_conversion.scripts.coco2geojson \
                 /path/to/data/raster_tiles/dir \
                 /path/to/data/predictions-coco.json \
                 --tile-extension .tif \
@@ -98,7 +98,7 @@ python coco2geojson.py \
 To do a batch conversion, when the conversion should be carried on multiple input images, use the following command:
 
 ```
-python batch_coco2geojson.py \
+python -m aerial_conversion.scripts.batch_coco2geojson \
                 --raster-dir /path/to/data/rasters/ \
                 --vector-dir /path/to/data/geojsons/ \
                 --output-dir /path/to/data/outputs/ \

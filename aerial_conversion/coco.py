@@ -433,8 +433,9 @@ def polygon_prep(
     polygon = Polygon(polygon)
     if minimum_rotated_rectangle:
         polygon = polygon.minimum_rotated_rectangle
-    elif simplify_tolerance > 0:
-        polygon = polygon.simplify(simplify_tolerance)
+    else:
+        if simplify_tolerance > 0:
+            polygon = polygon.simplify(simplify_tolerance)
         if orthogonalise:
             polygon = orthogonalise_polygon(polygon)
     polygon = np.array(polygon.exterior.coords)

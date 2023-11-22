@@ -89,7 +89,7 @@ To merge multiple COCO JSON files, and yield a geojson file for the input raster
 python -m aerial_conversion.scripts.coco2geojson \
                 /path/to/data/raster_tiles/dir \
                 /path/to/data/predictions-coco.json \
-                --tile-extension .tif \
+                --tile-extension tif \
                 --geojson-output /path/to/data/output.geojson \
                 --meta-name <name_of_the_dataset>
                 --minimum-rotated-rectangle 

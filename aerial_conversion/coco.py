@@ -10,9 +10,10 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio as rio
-from orthogonalise.orthogonalise import orthogonalise_polygon
 from PIL import Image
 from shapely.geometry import Polygon
+
+from aerial_conversion.orthogonalise import orthogonalise
 
 log = logging.getLogger(__name__)
 
@@ -410,7 +411,7 @@ def polygon_prep(
     polygon,
     simplify_tolerance: float = 0.0,
     minimum_rotated_rectangle: bool = False,
-    orthogonalise: bool = False,
+    orthogonalisation: bool = False,
 ):
     """Prepares a polygon for export.
 
@@ -436,8 +437,8 @@ def polygon_prep(
     else:
         if simplify_tolerance > 0:
             polygon = polygon.simplify(simplify_tolerance)
-        if orthogonalise:
-            polygon = orthogonalise_polygon(polygon)
+        if orthogonalisation:
+            polygon = orthogonalise.orthogonalise_polygon(polygon)
     polygon = np.array(polygon.exterior.coords)
 
     return polygon

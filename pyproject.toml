@@ -31,7 +31,7 @@ coco2geojson = "aerial_conversion.scripts.coco2geojson:main"
 geojson2coco = "aerial_conversion.scripts.geojson2coco:main"
 
 [tool.setuptools]
-packages = ["aerial_conversion", "aerial_conversion.scripts"]
+packages = ["aerial_conversion", "aerial_conversion.scripts", "aerial_conversion.orthogonalise"]
 
 [tool.setuptools.package-dir]
 aerial_conversion = "aerial_conversion"

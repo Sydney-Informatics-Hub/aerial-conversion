@@ -155,7 +155,7 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
 
 
 def shape_regulariser(
-    polygon, simplify_tolerance, minimum_rotated_rectangle, orthogonalise
+    polygon, simplify_tolerance, minimum_rotated_rectangle, orthogonalisation
 ):
     """Regularise the shape of a polygon.
 
@@ -173,7 +173,7 @@ def shape_regulariser(
         polygon_point_tuples,
         simplify_tolerance,
         minimum_rotated_rectangle,
-        orthogonalise,
+        orthogonalisation,
     )
     polygon = Polygon(polygon)
 
@@ -239,9 +239,9 @@ def main(args=None):
         help="If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.",
     )
     ap.add_argument(
-        "--orthogonalise",
+        "--orthogonalisation",
         action=argparse.BooleanOptionalAction,
-        help="If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification. You can manually set a simplification tolerance, but a default value will be used if not set.",
+        help="If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification. You can manually set a simplification tolerance, but a default value will be used if not set. If the shape is pre-simplified in the `aerial_annotation` package, then this will not be necessary to simplify again and you can set simplify-tolerance to a very low value or zero.",
     )
     ap.add_argument(
         "--meta-name",
@@ -284,7 +284,7 @@ def main(args=None):
     tile_extension = args.tile_extension
     simplify_tolerance = args.simplify_tolerance
     minimum_rotated_rectangle = args.minimum_rotated_rectangle
-    orthogonalise = args.orthogonalise
+    orthogonalisation = args.orthogonalisation
 
     # keep_geom_type = (
     #     not args.not_keep_geom_type
@@ -339,7 +339,7 @@ def main(args=None):
     # print(polygons_df)
     polygons_df["geometry"] = polygons_df["geometry"].apply(
         lambda x: shape_regulariser(
-            x, simplify_tolerance, minimum_rotated_rectangle, orthogonalise
+            x, simplify_tolerance, minimum_rotated_rectangle, orthogonalisation
         )
     )
 

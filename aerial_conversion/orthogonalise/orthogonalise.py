@@ -21,6 +21,7 @@
                      - Added improvement when 180˚ turns are present the builing shape
                1.0.3 - Leave sides of polygon that are meant to be skewed untouched
                1.0.4 - Add orthogonalization for inner polygon rings (holes)
+               1.0.5 - Fix bug when polygon is not valid  --- By Sahand Vahidnia (@sahandv) 23-11-2023
 """
 
 import math

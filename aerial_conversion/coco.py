@@ -10,10 +10,9 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio as rio
+from orthogonalise import orthogonalise
 from PIL import Image
 from shapely.geometry import Polygon
-
-from aerial_conversion.orthogonalise import orthogonalise
 
 log = logging.getLogger(__name__)
 

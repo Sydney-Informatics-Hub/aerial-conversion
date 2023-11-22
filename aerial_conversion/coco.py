@@ -13,7 +13,7 @@ import rasterio as rio
 from PIL import Image
 from shapely.geometry import Polygon
 
-from aerial_conversion.orthogonalise import orthogonalise
+from .orthogonalise import orthogonalise
 
 log = logging.getLogger(__name__)
 

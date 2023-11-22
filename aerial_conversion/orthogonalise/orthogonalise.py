@@ -29,6 +29,7 @@ import statistics
 import geopandas as gpd
 from shapely import speedups
 from shapely.geometry import Polygon
+from shapely.validation import explain_validity, make_valid
 
 speedups.enable()
 
@@ -211,6 +212,22 @@ def orthogonalise_polygon(polygon, maxAngleChange=15, skewTolerance=15):
 
     polyOrthog = []
     for polySimple in rings:
+        # print(polySimple)
+        # print("Validity: ",polySimple.is_valid)
+
+        if polySimple.is_valid is False:
+            print("Polygon is not valid. Trying to fix it.")
+            polySimple = polySimple.buffer(0)
+
+        if polySimple.is_valid is False:
+            print("Polygon is not valid. Trying to fix it again.")
+            polySimple = polySimple.buffer(0.0000001)
+
+        if polySimple.is_valid is False:
+            print("Polygon is not valid. The reason is explained below:")
+            print(explain_validity(polySimple))
+
+        polySimple = make_valid(polySimple)
 
         # Get angles from cardinal directions of all segments
         orgAngle, corAngle, dirAngle = calculate_segment_angles(polySimple)

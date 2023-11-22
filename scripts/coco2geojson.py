@@ -35,6 +35,8 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 
 log = logging.getLogger(__name__)
 
+tqdm.pandas()
+
 
 def merge_class_polygons_geopandas(tiles_df_zone_groups, crs, keep_geom_type):
     """Merge overlapping polygons in each class/zone.
@@ -336,12 +338,19 @@ def main(args=None):
     polygons_df = merge_class_polygons_shapely(tiles_df_zone_groups, crs)
     # polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow
 
+    # change crs of the gpd and its geometries to "epsg:4326"
+    original_crs = polygons_df.crs
+    polygons_df = polygons_df.to_crs("epsg:4326")
+
+    print("Regularising the shape of the polygons.")
     # print(polygons_df)
-    polygons_df["geometry"] = polygons_df["geometry"].apply(
+    polygons_df["geometry"] = polygons_df["geometry"].progress_apply(
         lambda x: shape_regulariser(
             x, simplify_tolerance, minimum_rotated_rectangle, orthogonalisation
         )
     )
+
+    polygons_df = polygons_df.to_crs(original_crs)
 
     # print(polygons_df)
 

@@ -105,7 +105,7 @@ To create tiles from a raster file, use the following command:
 
 ::
 
-   python geojson2coco.py \
+   python -m aerial_conversion.scripts.geojson2coco \
                    --raster-file /path/to/data/chatswood_hd.tif \
                    --polygon-file /path/to/data/chatswood.geojson \
                    --tile-dir /path/to/data/big_tiles \
@@ -118,10 +118,10 @@ input raster, use the following command:
 
 ::
 
-   python coco2geojson.py \
+   python -m aerial_conversion.scripts.coco2geojson \
                    /path/to/data/raster_tiles/dir \
                    /path/to/data/predictions-coco.json \
-                   --tile-extension .tif \
+                   --tile-extension tif \
                    --geojson-output /path/to/data/output.geojson \
                    --meta-name <name_of_the_dataset>
                    --minimum-rotated-rectangle 
@@ -133,7 +133,7 @@ multiple input images, use the following command:
 
 ::
 
-   python batch_coco2geojson.py \
+   python -m aerial_conversion.scripts.batch_coco2geojson \
                    --raster-dir /path/to/data/rasters/ \
                    --vector-dir /path/to/data/geojsons/ \
                    --output-dir /path/to/data/outputs/ \

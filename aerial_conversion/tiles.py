@@ -7,7 +7,7 @@ import os
 import rasterio as rio
 import rasterio.windows as riow
 
-"""A collectio of functions for manipulating raster tiles."""
+"""A collection of functions for manipulating raster tiles."""
 
 
 log = logging.getLogger(__name__)
@@ -89,6 +89,7 @@ def save_tiles(
     tile_size: int = 2000,
     tile_template: str = "tile_{}-{}.tif",
     offset: float = 0.0,
+    map_units: bool = True,
 ):
     """Save tiles from a raster file.
 
@@ -98,6 +99,7 @@ def save_tiles(
         tile_size (int): Size of tiles.
         tile_template (str): Template for tile names. Should contain two {} placeholders for the x and y coordinates of the tile.
         offset (float, optional): Padding/offset/overlap in percentage of tile. Defaults to 0.0.
+        map_units (bool, optional): If True, tile_width and tile_height are in map units. Defaults to True.
 
     Returns:
         None
@@ -113,7 +115,7 @@ def save_tiles(
     tile_width, tile_height = tile_size, tile_size
     meta = geotiff.meta.copy()
     for window, transform in get_tiles(
-        geotiff, tile_width, tile_height, map_units=True, offset=offset
+        geotiff, tile_width, tile_height, map_units=map_units, offset=offset
     ):
         meta["transform"] = transform
         meta["width"], meta["height"] = window.width, window.height

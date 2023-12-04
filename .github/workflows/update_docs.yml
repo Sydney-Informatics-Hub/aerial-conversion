@@ -29,5 +29,5 @@ jobs:
         run: |
           cd docs_source
           make html  # Replace 'html' with your desired output format (e.g., html, dirhtml, etc.)
-          mv _build/html/* ../docs
+          mv -u _build/html/* ../docs
 

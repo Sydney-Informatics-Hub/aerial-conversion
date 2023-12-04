@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aerial_conversion.COCO_validator &mdash; Aerial Conversion v1.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=95484ca5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">aerial_conversion.COCO_validator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for aerial_conversion.COCO_validator</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c1"># Credits to: https://gist.github.com/srishilesh/6c953ff1d7ee006b412be7674d1542cb</span>
+
+
+<div class="viewcode-block" id="assertions">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.COCO_validator.assertions">[docs]</a>
+<span class="k">def</span> <span class="nf">assertions</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">required_keys</span><span class="p">,</span> <span class="n">unique_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">unique_key_id_mapper</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">unique_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">unique_key_id_mapper</span><span class="p">[</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">unique_key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">required_key</span> <span class="ow">in</span> <span class="n">required_keys</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">required_key</span> <span class="ow">in</span> <span class="n">value</span>
+            <span class="p">),</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; does not contain the required key &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">required_key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unique_key_id_mapper</span></div>
+
+
+
+<div class="viewcode-block" id="annotation_assertions">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.COCO_validator.annotation_assertions">[docs]</a>
+<span class="k">def</span> <span class="nf">annotation_assertions</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">annotations</span><span class="p">,</span> <span class="n">image_map</span><span class="p">,</span> <span class="n">category_map</span><span class="p">):</span>
+    <span class="n">required_keys</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;area&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;iscrowd&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;bbox&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;category_id&quot;</span><span class="p">,</span>
+        <span class="c1"># &quot;ignore&quot;,</span>
+        <span class="s2">&quot;segmentation&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;image_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">assertions</span><span class="p">(</span><span class="s2">&quot;annotations&quot;</span><span class="p">,</span> <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">],</span> <span class="n">required_keys</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">annotations</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">4</span>
+        <span class="p">),</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; key in &#39;annotations&#39; does not match the expected format&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;category_id&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">category_map</span>
+        <span class="p">),</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is not present in the &#39;categories&#39; mapping&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;category_id&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">image_map</span>
+        <span class="p">),</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is not present in the &#39;images&#39; mapping&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;area&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="p">),</span> <span class="s2">&quot;Mismatch of values in &#39;</span><span class="si">{}</span><span class="s2">&#39; and &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;area&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;segmentation&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">8</span>
+            <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;segmentation&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; must either be an empty list or contain a list of 8 values&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s2">&quot;segmentation&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;iscrowd&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;iscrowd&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; must either be 0 or 1. </span><span class="si">{}</span><span class="s2"> is invalid&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s2">&quot;iscrowd&quot;</span><span class="p">,</span> <span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;iscrowd&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../aerial_conversion.html#aerial_conversion.COCO_validator.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">coco_data</span><span class="p">):</span>
+    <span class="n">required_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;annotations&quot;</span><span class="p">,</span> <span class="s2">&quot;categories&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">required_key</span> <span class="ow">in</span> <span class="n">required_keys</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">required_key</span> <span class="ow">in</span> <span class="n">coco_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">),</span> <span class="s2">&quot;Required key &#39;</span><span class="si">{}</span><span class="s2">&#39; not found in the COCO dataset&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">required_key</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">coco_data</span><span class="p">[</span><span class="n">required_key</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;Required key &#39;</span><span class="si">{}</span><span class="s2">&#39; does not contain values&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">required_key</span><span class="p">)</span>
+
+    <span class="n">image_map</span> <span class="o">=</span> <span class="n">assertions</span><span class="p">(</span>
+        <span class="s2">&quot;images&quot;</span><span class="p">,</span>
+        <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">],</span>
+        <span class="p">[</span><span class="s2">&quot;file_name&quot;</span><span class="p">,</span> <span class="s2">&quot;height&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;file_name&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">category_map</span> <span class="o">=</span> <span class="n">assertions</span><span class="p">(</span>
+        <span class="s2">&quot;categories&quot;</span><span class="p">,</span> <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;categories&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;supercategory&quot;</span><span class="p">],</span> <span class="s2">&quot;name&quot;</span>
+    <span class="p">)</span>
+    <span class="n">annotation_assertions</span><span class="p">(</span>
+        <span class="s2">&quot;annotations&quot;</span><span class="p">,</span> <span class="n">coco_data</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">],</span> <span class="n">image_map</span><span class="p">,</span> <span class="n">category_map</span>
+    <span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The dataset format is COCO!&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">coco_file</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;/home/sahand/Data/GIS2COCO/chatswood/coco_from_gis.json&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">coco_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+        <span class="n">coco_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">coco_data</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

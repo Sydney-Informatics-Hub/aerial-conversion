@@ -1,9 +1,24 @@
 aerial\_conversion package
 ==========================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aerial_conversion.orthogonalise
+
 Submodules
 ----------
 
+aerial\_conversion.COCO\_validator module
+-----------------------------------------
+
+.. automodule:: aerial_conversion.COCO_validator
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 aerial\_conversion.coco module
 ------------------------------
@@ -28,18 +43,6 @@ aerial\_conversion.tiles module
    :members:
    :undoc-members:
    :show-inheritance:
-
-
-aerial\_conversion.COCO\_validator module
------------------------------------------
-
-This module is currently not used in the main code. It is a work in progress.
-
-.. automodule:: aerial_conversion.COCO_validator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 
 Module contents
 ---------------

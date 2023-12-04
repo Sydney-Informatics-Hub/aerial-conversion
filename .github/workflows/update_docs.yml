@@ -27,7 +27,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          cd docs
-          make clean html  # Replace 'html' with your desired output format (e.g., html, dirhtml, etc.)
-          mv -r docs_source/_build/html/* docs
+          cd docs_source
+          make html  # Replace 'html' with your desired output format (e.g., html, dirhtml, etc.)
+          mv -r _build/html/* ../docs
 

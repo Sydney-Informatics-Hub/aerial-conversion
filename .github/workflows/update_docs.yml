@@ -1,0 +1,32 @@
+name: Update Documentation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'  # Replace '3.x' with your Python version
+
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements.txt  # Install Sphinx and any other dependencies
+
+      - name: Build documentation
+        run: |
+          cd docs
+          make clean html  # Replace 'html' with your desired output format (e.g., html, dirhtml, etc.)
+

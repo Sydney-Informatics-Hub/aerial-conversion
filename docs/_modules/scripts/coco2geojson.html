@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts.coco2geojson &mdash; Aerial Conversion v1.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=95484ca5"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scripts.coco2geojson</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scripts.coco2geojson</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This script supports converting a COCO dataset into a georeferenced geojson</span>
+<span class="sd">file.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="c1"># import glob</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="c1"># import traceback</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">Polygon</span>
+<span class="kn">from</span> <span class="nn">shapely.ops</span> <span class="kn">import</span> <span class="n">unary_union</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">aerial_conversion.coco</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">coco_annotation_per_image_df</span><span class="p">,</span>
+    <span class="n">coco_categories_dict</span><span class="p">,</span>
+    <span class="n">polygon_prep</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">aerial_conversion.coordinates</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">pixel_segmentation_to_spatial_rio</span><span class="p">,</span>
+    <span class="n">read_crs_from_raster</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">aerial_conversion.tiles</span> <span class="kn">import</span> <span class="n">get_tiles_list_from_dir</span><span class="p">,</span> <span class="n">load_tiles_from_list</span>
+
+<span class="c1"># import rasterio as rio</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">tqdm</span><span class="o">.</span><span class="n">pandas</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="merge_class_polygons_geopandas">
+<a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.merge_class_polygons_geopandas">[docs]</a>
+<span class="k">def</span> <span class="nf">merge_class_polygons_geopandas</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">keep_geom_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge overlapping polygons in each class/zone.</span>
+
+<span class="sd">    This method uses geopandas overlay to merge overlapping polygons in each class/zone.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tiles_df_zone_groups (list): List of GeoDataFrames, one per zone (building/annotation typle/class)</span>
+<span class="sd">        crs (str): Coordinate system</span>
+<span class="sd">        keep_geom_type (bool): If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        polygons_df (GeoDataFrame): GeoDataFrame of merged polygons</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using the overlay method to merge overlapping polygons in each class/zone.&quot;</span><span class="p">)</span>
+    <span class="c1"># Create a list of GeoDataFrames, one per zone (building/annotation typle/class)</span>
+    <span class="n">polygons_df_zone_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">tiles_df_zone</span> <span class="ow">in</span> <span class="n">tiles_df_zone_groups</span><span class="p">:</span>
+        <span class="n">tiles_df_zone</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Convert segmentations to polygons</span>
+        <span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">pixel_segmentation_to_spatial_rio</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">[</span><span class="s2">&quot;geotiff&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;segmentation&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">iterrows</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># Create a GeoDataFrame with the polygons</span>
+            <span class="n">polygons_df_tmp</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]])</span>
+            <span class="c1"># polygons_df_tmp[&quot;zone_code&quot;] = row[&quot;zone_code&quot;]</span>
+            <span class="c1"># polygons_df_tmp[&quot;zone_name&quot;] = row[&quot;zone_name&quot;]</span>
+            <span class="c1"># polygons_df_tmp[&quot;tile&quot;] = row[&quot;tile_name&quot;]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">polygons_df_tmp</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">polygons_df_zone</span> <span class="o">=</span> <span class="n">polygons_df_tmp</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Merge the GeoDataFrames and combine overlapping polygons</span>
+                    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;marginal&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="n">polygons_df_zone</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">overlay</span><span class="p">(</span>
+                            <span class="n">polygons_df_zone</span><span class="p">,</span>
+                            <span class="n">polygons_df_tmp</span><span class="p">,</span>
+                            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;union&quot;</span><span class="p">,</span>
+                            <span class="n">keep_geom_type</span><span class="o">=</span><span class="n">keep_geom_type</span><span class="p">,</span>
+                        <span class="p">)</span>  <span class="c1"># .reset_index(drop=True)</span>
+                        <span class="c1"># TODO: Fix the following warning, or be careful abou the versions. (pandas==2.1.0, geopandas==0.13.2):</span>
+                        <span class="c1"># FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated.</span>
+                        <span class="c1">#   In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes.</span>
+                        <span class="c1">#   To retain the old behavior, exclude the relevant entries before the concat operation</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">polygons_df_zone</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                            <span class="p">[</span><span class="n">polygons_df_zone</span><span class="p">,</span> <span class="n">polygons_df_tmp</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span>
+                        <span class="p">)</span>
+
+            <span class="c1"># print(polygons_df_zone)</span>
+        <span class="n">polygons_df_zone</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">]</span>
+        <span class="n">polygons_df_zone</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">]</span>
+        <span class="n">polygons_df_zone_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygons_df_zone</span><span class="p">)</span>
+
+    <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">polygons_df_zone_groups</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">polygons_df</span></div>
+
+
+
+<div class="viewcode-block" id="merge_class_polygons_shapely">
+<a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.merge_class_polygons_shapely">[docs]</a>
+<span class="k">def</span> <span class="nf">merge_class_polygons_shapely</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">,</span> <span class="n">crs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge overlapping polygons in each class/zone.</span>
+
+<span class="sd">    This method uses shapely unary_union to merge overlapping polygons in each class/zone.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tiles_df_zone_groups (list): List of GeoDataFrames, one per zone (building/annotation typle/class)</span>
+<span class="sd">        crs (str): Coordinate system</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        polygons_df (GeoDataFrame): GeoDataFrame of merged polygons</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span>
+        <span class="s2">&quot;Using the unary_union method to merge overlapping polygons in each class/zone.&quot;</span>
+    <span class="p">)</span>
+    <span class="c1"># polygons_df_zone_groups = []</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">tiles_df_zone</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+        <span class="nb">enumerate</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">tiles_df_zone</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Convert segmentations to polygons</span>
+        <span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">pixel_segmentation_to_spatial_rio</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">[</span><span class="s2">&quot;geotiff&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;segmentation&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Merge overlapping polygons in each class/zone</span>
+        <span class="n">zone_name</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">zone_code</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">multipolygon</span> <span class="o">=</span> <span class="n">unary_union</span><span class="p">(</span><span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">])</span>
+        <span class="c1"># polygons = list(multipolygon.geoms)</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="n">multipolygon</span><span class="p">])</span>
+            <span class="n">polygons_df</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zone_code</span>
+            <span class="n">polygons_df</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zone_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">polygons_df_tmp</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="p">[</span><span class="n">multipolygon</span><span class="p">])</span>
+            <span class="n">polygons_df_tmp</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zone_code</span>
+            <span class="n">polygons_df_tmp</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zone_name</span>
+            <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">polygons_df</span><span class="p">,</span> <span class="n">polygons_df_tmp</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">polygons_df</span><span class="o">.</span><span class="n">explode</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># for poly in tqdm(polygons[1:]):</span>
+    <span class="c1">#     polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[poly])</span>
+    <span class="c1">#     polygons_df_tmp[&quot;zone_code&quot;] = zone_code</span>
+    <span class="c1">#     polygons_df_tmp[&quot;zone_name&quot;] = zone_name</span>
+    <span class="c1">#     polygons_df = pd.concat([polygons_df, polygons_df_tmp], ignore_index=True)</span>
+    <span class="k">return</span> <span class="n">polygons_df</span></div>
+
+
+
+<div class="viewcode-block" id="shape_regulariser">
+<a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.shape_regulariser">[docs]</a>
+<span class="k">def</span> <span class="nf">shape_regulariser</span><span class="p">(</span>
+    <span class="n">polygon</span><span class="p">,</span> <span class="n">simplify_tolerance</span><span class="p">,</span> <span class="n">minimum_rotated_rectangle</span><span class="p">,</span> <span class="n">orthogonalisation</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Regularise the shape of a polygon.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        polygon (shapely.geometry.Polygon): Polygon to regularise</span>
+<span class="sd">        simplify_tolerance (float): Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0.</span>
+<span class="sd">        minimum_rotated_rectangle (bool): If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.</span>
+<span class="sd">        orthogonalise (bool): If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        shapely.geometry.Polygon: Regularised polygon</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">polygon_point_tuples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
+    <span class="n">polygon</span> <span class="o">=</span> <span class="n">polygon_prep</span><span class="p">(</span>
+        <span class="n">polygon_point_tuples</span><span class="p">,</span>
+        <span class="n">simplify_tolerance</span><span class="p">,</span>
+        <span class="n">minimum_rotated_rectangle</span><span class="p">,</span>
+        <span class="n">orthogonalisation</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">polygon</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">polygon</span></div>
+
+
+
+<span class="c1">#%% Command-line driver</span>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Command-line driver.&quot;&quot;&quot;</span>
+    <span class="n">test_data_path</span> <span class="o">=</span> <span class="s2">&quot;/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/&quot;</span>
+    <span class="n">ap</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;tiledir&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">test_data_path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the input tiles directory with rasters. PNG files are not required.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;cocojson&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_data_path</span><span class="p">,</span> <span class="s2">&quot;coco-out-tol_0.4-b.json&quot;</span><span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the input coco json file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--tile-extension&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;tif&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Extension of tiles. Defaults to </span><span class="si">%(default)s</span><span class="s2">. Do not include a period before the extension.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--geojson-output&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="c1"># required=True,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">test_data_path</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;coco_2_geojson_</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">.geojson&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to output geojson file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--tile-search-margin&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;-- Deprecation Warning -- Int percentage of tile size to use as a search margin for finding overlapping polygons while joining raster. This function only reports the marginal tiles and is not functional in any other way. Defaults to </span><span class="si">%(default)s</span><span class="s2">.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--not-keep-geom-type&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;-- Deprecated Argument -- If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--simplify-tolerance&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0. Defaults to </span><span class="si">%(default)s</span><span class="s2">.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--minimum-rotated-rectangle&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--orthogonalisation&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification. You can manually set a simplification tolerance, but a default value will be used if not set. If the shape is pre-simplified in the `aerial_annotation` package, then this will not be necessary to simplify again and you can set simplify-tolerance to a very low value or zero.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--meta-name&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;Aerial Segmentation Predictions&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Name of the prediction.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--meta-type&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;FeatureCollection&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Type of the output geojson file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--properties-json&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a JSON file containing common properties to add to the geojson file for each annotation.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--coordinates-z&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;A common Z coordinate to use for all annotations. If not set, will not add Z coordinates.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--license&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to a license description in COCO JSON format. If not supplied, will default to MIT license.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read tiles and COCO JSON, and convert to GeoJSON.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">geojson_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">geojson_output</span>
+    <span class="n">tile_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tiledir</span>
+    <span class="n">meta_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">meta_name</span>
+    <span class="n">coco_json_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cocojson</span>
+    <span class="n">tile_extension</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_extension</span>
+    <span class="n">simplify_tolerance</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">simplify_tolerance</span>
+    <span class="n">minimum_rotated_rectangle</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">minimum_rotated_rectangle</span>
+    <span class="n">orthogonalisation</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">orthogonalisation</span>
+
+    <span class="c1"># keep_geom_type = (</span>
+    <span class="c1">#     not args.not_keep_geom_type</span>
+    <span class="c1"># )  # should be True # only meaningful when using geopandas overlay method</span>
+    <span class="n">tile_search_margin</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_search_margin</span>
+
+    <span class="c1"># Read tiles</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Reading tiles from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">tile_dir</span><span class="p">)</span>
+    <span class="n">tiles_list</span> <span class="o">=</span> <span class="n">get_tiles_list_from_dir</span><span class="p">(</span><span class="n">tile_dir</span><span class="p">,</span> <span class="n">tile_extension</span><span class="p">)</span>
+    <span class="n">geotifs</span> <span class="o">=</span> <span class="n">load_tiles_from_list</span><span class="p">(</span><span class="n">tiles_list</span><span class="o">=</span><span class="n">tiles_list</span><span class="p">)</span>
+    <span class="n">crs</span> <span class="o">=</span> <span class="n">read_crs_from_raster</span><span class="p">(</span><span class="n">tiles_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Read COCO JSON and extract annotations per reference image</span>
+    <span class="n">tiles_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="nb">zip</span><span class="p">(</span><span class="n">tiles_list</span><span class="p">,</span> <span class="n">geotifs</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;raster_path&quot;</span><span class="p">,</span> <span class="s2">&quot;geotiff&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;tile_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;raster_path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">coco_images_df</span> <span class="o">=</span> <span class="n">coco_annotation_per_image_df</span><span class="p">(</span><span class="n">coco_json_path</span><span class="p">,</span> <span class="n">tile_search_margin</span><span class="p">)</span>
+    <span class="n">coco_categories</span> <span class="o">=</span> <span class="n">coco_categories_dict</span><span class="p">(</span><span class="n">coco_json_path</span><span class="p">)</span>
+    <span class="c1"># coco_images_df[&quot;annotations&quot;][0][&quot;bbox&quot;]</span>
+
+    <span class="c1"># Merge COCO JSON with tiles</span>
+    <span class="n">tiles_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tiles_df</span><span class="p">,</span> <span class="n">coco_images_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;tile_name&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Unpack annotations to segmentation column, yielding longer dataframe</span>
+    <span class="n">tiles_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;segmentation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;segmentation&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;bbox&quot;</span><span class="p">])</span>
+    <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;category_id&quot;</span><span class="p">])</span>
+    <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">coco_categories</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;marginal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;marginal&quot;</span><span class="p">])</span>
+    <span class="n">tiles_df</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;annotations&quot;</span><span class="p">])</span>
+
+    <span class="c1"># tiles_df[tiles_df[&quot;marginal&quot;]==False]</span>
+
+    <span class="c1"># Group by zone ID, extract polygons, and merge overlapping polygons in the same zone</span>
+    <span class="n">tiles_df_grouped</span> <span class="o">=</span> <span class="n">tiles_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;zone_code&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">groups</span>
+    <span class="n">tiles_df_zone_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">tiles_df_grouped</span><span class="p">:</span>
+        <span class="n">tiles_df_zone_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tiles_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">tiles_df_grouped</span><span class="p">[</span><span class="n">zone</span><span class="p">]])</span>
+
+    <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">merge_class_polygons_shapely</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">,</span> <span class="n">crs</span><span class="p">)</span>
+    <span class="c1"># polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow</span>
+
+    <span class="c1"># change crs of the gpd and its geometries to &quot;epsg:4326&quot;</span>
+    <span class="n">original_crs</span> <span class="o">=</span> <span class="n">polygons_df</span><span class="o">.</span><span class="n">crs</span>
+    <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">polygons_df</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Regularising the shape of the polygons.&quot;</span><span class="p">)</span>
+    <span class="c1"># print(polygons_df)</span>
+    <span class="n">polygons_df</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygons_df</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">progress_apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">shape_regulariser</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">simplify_tolerance</span><span class="p">,</span> <span class="n">minimum_rotated_rectangle</span><span class="p">,</span> <span class="n">orthogonalisation</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">polygons_df</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">original_crs</span><span class="p">)</span>
+
+    <span class="c1"># print(polygons_df)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">polygons_df</span><span class="o">.</span><span class="n">Name</span> <span class="o">=</span> <span class="n">meta_name</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not set Name property of geojson. Error message: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FIX this code!&quot;</span><span class="p">)</span>
+    <span class="c1"># Save to geojson</span>
+    <span class="n">polygons_df</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

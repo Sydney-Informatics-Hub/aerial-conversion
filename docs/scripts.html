@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scripts package &mdash; Aerial Conversion v1.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=95484ca5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">scripts package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-scripts.batch_geojson2coco">scripts.batch_geojson2coco module</a><ul>
+<li><a class="reference internal" href="#scripts.batch_geojson2coco.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.batch_geojson2coco.process_single"><code class="docutils literal notranslate"><span class="pre">process_single()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.batch_geojson2coco.resume"><code class="docutils literal notranslate"><span class="pre">resume()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-scripts.coco2geojson">scripts.coco2geojson module</a><ul>
+<li><a class="reference internal" href="#scripts.coco2geojson.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_geopandas"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_geopandas()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_shapely"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_shapely()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.coco2geojson.shape_regulariser"><code class="docutils literal notranslate"><span class="pre">shape_regulariser()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-scripts.geojson2coco">scripts.geojson2coco module</a><ul>
+<li><a class="reference internal" href="#scripts.geojson2coco.assemble_coco_json"><code class="docutils literal notranslate"><span class="pre">assemble_coco_json()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.geojson2coco.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-scripts">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">scripts package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/scripts.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="scripts-package">
+<h1>scripts package<a class="headerlink" href="#scripts-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-scripts.batch_geojson2coco">
+<span id="scripts-batch-geojson2coco-module"></span><h2>scripts.batch_geojson2coco module<a class="headerlink" href="#module-scripts.batch_geojson2coco" title="Link to this heading"></a></h2>
+<p>This script supports batch conversion of paired geojson and raster data into
+a series of COCO datasets.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.batch_geojson2coco.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.main" title="Link to this definition"></a></dt>
+<dd><p>Convert raster and vector pairs to COCO JSON format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – Command-line arguments.</p>
+</dd>
+</dl>
+<dl>
+<dt>Usage Example:</dt><dd><p># Convert raster and vector pairs without concatenation
+python batch_geojson2coco.py –raster-dir /path/to/raster_dir –vector-dir /path/to/vector_dir –output-dir /path/to/output_dir</p>
+<p># Convert raster and vector pairs with concatenation
+python batch_geojson2coco.py –raster-dir /path/to/raster_dir –vector-dir /path/to/vector_dir –output-dir /path/to/output_dir –concatenate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.batch_geojson2coco.process_single">
+<span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">process_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#process_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.process_single" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.batch_geojson2coco.resume">
+<span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">resume</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#resume"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.resume" title="Link to this definition"></a></dt>
+<dd><p>Resume a batch job from an output directory.</p>
+<p>Check for the directories that are already processed, and check if they have a .json in them, then record them as already processed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output_dir</strong> (<em>str</em>) – Path to the output directory.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of raster files that are already processed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-scripts.coco2geojson">
+<span id="scripts-coco2geojson-module"></span><h2>scripts.coco2geojson module<a class="headerlink" href="#module-scripts.coco2geojson" title="Link to this heading"></a></h2>
+<p>This script supports converting a COCO dataset into a georeferenced geojson
+file.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.coco2geojson.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.main" title="Link to this definition"></a></dt>
+<dd><p>Command-line driver.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.coco2geojson.merge_class_polygons_geopandas">
+<span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">merge_class_polygons_geopandas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiles_df_zone_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_geom_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#merge_class_polygons_geopandas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.merge_class_polygons_geopandas" title="Link to this definition"></a></dt>
+<dd><p>Merge overlapping polygons in each class/zone.</p>
+<p>This method uses geopandas overlay to merge overlapping polygons in each class/zone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiles_df_zone_groups</strong> (<em>list</em>) – List of GeoDataFrames, one per zone (building/annotation typle/class)</p></li>
+<li><p><strong>crs</strong> (<em>str</em>) – Coordinate system</p></li>
+<li><p><strong>keep_geom_type</strong> (<em>bool</em>) – If not set, return only geometries of the same geometry type as df1 has, otherwise, return all resulting geometries. It it advised not to set this parameter. It is known to casue polygon matching issues.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>GeoDataFrame of merged polygons</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>polygons_df (GeoDataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.coco2geojson.merge_class_polygons_shapely">
+<span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">merge_class_polygons_shapely</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tiles_df_zone_groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#merge_class_polygons_shapely"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.merge_class_polygons_shapely" title="Link to this definition"></a></dt>
+<dd><p>Merge overlapping polygons in each class/zone.</p>
+<p>This method uses shapely unary_union to merge overlapping polygons in each class/zone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tiles_df_zone_groups</strong> (<em>list</em>) – List of GeoDataFrames, one per zone (building/annotation typle/class)</p></li>
+<li><p><strong>crs</strong> (<em>str</em>) – Coordinate system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>GeoDataFrame of merged polygons</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>polygons_df (GeoDataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.coco2geojson.shape_regulariser">
+<span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">shape_regulariser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simplify_tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_rotated_rectangle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orthogonalisation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#shape_regulariser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.shape_regulariser" title="Link to this definition"></a></dt>
+<dd><p>Regularise the shape of a polygon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>polygon</strong> (<em>shapely.geometry.Polygon</em>) – Polygon to regularise</p></li>
+<li><p><strong>simplify_tolerance</strong> (<em>float</em>) – Tolerance for simplifying polygons. Accepts values between 0.0 and 1.0.</p></li>
+<li><p><strong>minimum_rotated_rectangle</strong> (<em>bool</em>) – If true, will return the minimum rotated rectangle of the polygon. If set, simplification will be ignored.</p></li>
+<li><p><strong>orthogonalise</strong> (<em>bool</em>) – If true, will orthogonalise the polygon. This does not work with minimum-rotated-rectangle. It only works with simplification.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Regularised polygon</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>shapely.geometry.Polygon</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-scripts.geojson2coco">
+<span id="scripts-geojson2coco-module"></span><h2>scripts.geojson2coco module<a class="headerlink" href="#module-scripts.geojson2coco" title="Link to this heading"></a></h2>
+<p>This script supports converting a vector shapefile and raster file into a
+COCO format dataset.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.geojson2coco.assemble_coco_json">
+<span class="sig-prename descclassname"><span class="pre">scripts.geojson2coco.</span></span><span class="sig-name descname"><span class="pre">assemble_coco_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster_file_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geojson</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colour</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/geojson2coco.html#assemble_coco_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.geojson2coco.assemble_coco_json" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.geojson2coco.main">
+<span class="sig-prename descclassname"><span class="pre">scripts.geojson2coco.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/geojson2coco.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.geojson2coco.main" title="Link to this definition"></a></dt>
+<dd><p>Command-line driver.</p>
+</dd></dl>
+
+</section>
+<section id="module-scripts">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-scripts" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

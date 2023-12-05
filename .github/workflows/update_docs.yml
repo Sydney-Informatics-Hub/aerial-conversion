@@ -42,12 +42,16 @@ jobs:
       - name: List directory contents Ffor debugging doc generation
         run: ls -l doc/_build/html/
 
+      - name: Delete the created files in the branch before checking out gh-pages
+        run: |
+          rm -rf doc/_build/html/*
+
       - name: Checkout gh-pages branch
         run: |
           git checkout gh-pages
           git pull origin gh-pages
 
-      - name: Delete all files in gh-pages branch
+      - name: Remove old documentation
         run: |
           rm -rf *
 
@@ -58,10 +62,6 @@ jobs:
 
       - name: List directory contents
         run: ls -l
-
-      - name: Cleanup and copy artifacts
-        run: |
-          cp -r doc/_build/html/* doc
 
       - name: Deploy documentation
         run: |

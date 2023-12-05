@@ -1,4 +1,4 @@
-name: Update Documentation
+name: Update Sphinx Documentation
 
 on:
   push:

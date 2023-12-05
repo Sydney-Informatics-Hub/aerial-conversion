@@ -36,8 +36,11 @@ jobs:
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: html
+          name: htmldoc
           path: doc/_build/html/
+
+      - name: List directory contents Ffor debugging doc generation
+        run: ls -l doc/_build/html/
 
       - name: Checkout gh-pages branch
         run: |
@@ -47,7 +50,10 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          name: html
+          name: htmldoc
+
+      - name: List directory contents
+        run: ls -l
 
       - name: Deploy documentation
         run: |

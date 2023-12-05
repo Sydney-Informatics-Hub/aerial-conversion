@@ -1,4 +1,4 @@
-name: Update Sphinx Documentation
+name: Update Documentation
 
 on:
   push:
@@ -7,17 +7,19 @@ on:
   pull_request:
     branches:
       - main
-      
-permissions:
-  contents: write
 
 jobs:
   build-docs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for doc
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
         with:
           python-version: '3.9'  # Replace '3.x' with your Python version
 
@@ -25,15 +27,34 @@ jobs:
         run: |
           pip install -r doc/requirements.txt  # Install Sphinx and any other dependencies
 
-      - name: Sphinx build
-        run: |
-          sphinx-build doc _build
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          - name: Build documentation
+          run: |
+            cd doc
+            make html
+            cd ..
+          shell: bash
+  
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v2
         with:
-          publish_branch: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: _build/
-          force_orphan: true
+          name: html
+          path: doc/_build/html/
 
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: html
+
+      - name: Deploy documentation
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "actions@github.com"
+          cp -r html/* .
+          git add .
+          git commit -m "Update documentation"
+          git push origin gh-pages

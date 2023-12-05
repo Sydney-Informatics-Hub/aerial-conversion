@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aerial_conversion.orthogonalise package &mdash; Aerial Conversion v1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=95484ca5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">aerial_conversion.orthogonalise package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-aerial_conversion.orthogonalise.orthogonalise">aerial_conversion.orthogonalise.orthogonalise module</a><ul>
+<li><a class="reference internal" href="#aerial_conversion.orthogonalise.orthogonalise.calculate_initial_compass_bearing"><code class="docutils literal notranslate"><span class="pre">calculate_initial_compass_bearing()</span></code></a></li>
+<li><a class="reference internal" href="#aerial_conversion.orthogonalise.orthogonalise.calculate_segment_angles"><code class="docutils literal notranslate"><span class="pre">calculate_segment_angles()</span></code></a></li>
+<li><a class="reference internal" href="#aerial_conversion.orthogonalise.orthogonalise.orthogonalise_polygon"><code class="docutils literal notranslate"><span class="pre">orthogonalise_polygon()</span></code></a></li>
+<li><a class="reference internal" href="#aerial_conversion.orthogonalise.orthogonalise.rotate_polygon"><code class="docutils literal notranslate"><span class="pre">rotate_polygon()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-aerial_conversion.orthogonalise">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">aerial_conversion.orthogonalise package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/aerial_conversion.orthogonalise.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="aerial-conversion-orthogonalise-package">
+<h1>aerial_conversion.orthogonalise package<a class="headerlink" href="#aerial-conversion-orthogonalise-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-aerial_conversion.orthogonalise.orthogonalise">
+<span id="aerial-conversion-orthogonalise-orthogonalise-module"></span><h2>aerial_conversion.orthogonalise.orthogonalise module<a class="headerlink" href="#module-aerial_conversion.orthogonalise.orthogonalise" title="Link to this heading"></a></h2>
+<p>File name: orthogonalize_polygon.py
+Author: Martin Machyna
+Email: <a class="reference external" href="mailto:machyna&#37;&#52;&#48;gmail&#46;com">machyna<span>&#64;</span>gmail<span>&#46;</span>com</a>
+Date created: 9/28/2020
+Date last modified: 9/30/2020
+Version: 1.0.4
+License: GPLv3
+credits: Jérôme Renard [calculate_initial_compass_bearing(): <a class="reference external" href="https://gist.github.com/jeromer/2005586">https://gist.github.com/jeromer/2005586</a>]</p>
+<blockquote>
+<div><p>JOSM project  [general idea: <a class="reference external" href="https://github.com/openstreetmap/josm/blob/6890fb0715ab22734b72be86537e33d5c4021c5d/src/org/openstreetmap/josm/actions/OrthogonalizeAction.java#L334">https://github.com/openstreetmap/josm/blob/6890fb0715ab22734b72be86537e33d5c4021c5d/src/org/openstreetmap/josm/actions/OrthogonalizeAction.java#L334</a>]</p>
+</div></blockquote>
+<p>Python Version: Python 3.8.5
+Modules: geopandas==0.8.2</p>
+<blockquote>
+<div><p>pandas==1.2.1
+Shapely==1.7.1
+Fiona==1.8.18
+numpy==1.19.5
+pyproj==3.0.0.post1</p>
+</div></blockquote>
+<dl>
+<dt>Changelog: 1.0.1 - Added constraint that in order to make the next segment continue in the same direction as the previous segment, it can not deviate from that direction more than +/- 20 degrees.</dt><dd><dl class="simple">
+<dt>1.0.2 - Fix cases when building is at ~45˚ angle to cardinal directions</dt><dd><ul class="simple">
+<li><p>Added improvement when 180˚ turns are present the builing shape</p></li>
+</ul>
+</dd>
+</dl>
+<p>1.0.3 - Leave sides of polygon that are meant to be skewed untouched
+1.0.4 - Add orthogonalization for inner polygon rings (holes)
+1.0.5 - Fix bug when polygon is not valid  — By Sahand Vahidnia (&#64;sahandv) 23-11-2023</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="aerial_conversion.orthogonalise.orthogonalise.calculate_initial_compass_bearing">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.orthogonalise.orthogonalise.</span></span><span class="sig-name descname"><span class="pre">calculate_initial_compass_bearing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pointA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pointB</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/orthogonalise/orthogonalise.html#calculate_initial_compass_bearing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.orthogonalise.orthogonalise.calculate_initial_compass_bearing" title="Link to this definition"></a></dt>
+<dd><p>Calculates the bearing between two points.</p>
+<dl class="simple">
+<dt>The formulae used is the following:</dt><dd><dl class="simple">
+<dt>θ = atan2(sin(Δlong).cos(lat2),</dt><dd><p>cos(lat1).sin(lat2) − sin(lat1).cos(lat2).cos(Δlong))</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a href="#id1"><span class="problematic" id="id2">`</span></a>pointA: The tuple representing the latitude/longitude for the
+first point. Latitude and longitude must be in decimal degrees</p></li>
+<li><p><a href="#id3"><span class="problematic" id="id4">`</span></a>pointB: The tuple representing the latitude/longitude for the
+second point. Latitude and longitude must be in decimal degrees</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The bearing in degrees</p>
+</dd>
+<dt class="field-odd">Returns Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aerial_conversion.orthogonalise.orthogonalise.calculate_segment_angles">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.orthogonalise.orthogonalise.</span></span><span class="sig-name descname"><span class="pre">calculate_segment_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polySimple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxAngleChange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">45</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/orthogonalise/orthogonalise.html#calculate_segment_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.orthogonalise.orthogonalise.calculate_segment_angles" title="Link to this definition"></a></dt>
+<dd><p>Calculates angles of all polygon segments to cardinal directions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a href="#id5"><span class="problematic" id="id6">`</span></a>polySimple: shapely polygon object containing simplified building.</p></li>
+<li><dl class="simple">
+<dt><a href="#id7"><span class="problematic" id="id8">`</span></a>maxAngleChange: angle (0,45&gt; degrees. Sets the maximum angle deviation</dt><dd><p>from the cardinal direction for the segment to be still
+considered to continue in the same direction as the
+previous segment.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p>orgAngle: Segments bearing</p></li>
+<li><p>corAngle: Segments angles to closest cardinal direction</p></li>
+<li><p>dirAngle: Segments direction [N, E, S, W] as [0, 1, 2, 3]</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aerial_conversion.orthogonalise.orthogonalise.orthogonalise_polygon">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.orthogonalise.orthogonalise.</span></span><span class="sig-name descname"><span class="pre">orthogonalise_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polygon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxAngleChange</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skewTolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/orthogonalise/orthogonalise.html#orthogonalise_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.orthogonalise.orthogonalise.orthogonalise_polygon" title="Link to this definition"></a></dt>
+<dd><p>Master function that makes all angles in polygon outer and inner rings
+either 90 or 180 degrees. Idea adapted from JOSM function orthogonalize 1)
+Calculate bearing [0-360 deg] of each polygon segment 2) From bearing
+determine general direction [N, E, S ,W], then calculate angle deviation
+from nearest cardinal direction for each segment 3) Rotate polygon by
+median deviation angle to align segments with xy coord axes (cardinal
+directions) 4) For vertical segments replace X coordinates of their points
+with mean value For horizontal segments replace Y coordinates of their
+points with mean value 5) Rotate back.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a href="#id9"><span class="problematic" id="id10">`</span></a>polygon: shapely polygon object containing simplified building.</p></li>
+<li><dl class="simple">
+<dt><a href="#id11"><span class="problematic" id="id12">`</span></a>maxAngleChange: angle (0,45&gt; degrees. Sets the maximum angle deviation</dt><dd><p>from the cardinal direction for the segment to be still
+considered to continue in the same direction as the
+previous segment.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a href="#id13"><span class="problematic" id="id14">`</span></a>skewTolerance: angle &lt;0,45&gt; degrees. Sets skew tolerance for segments that</dt><dd><p>are at 45˚±Tolerance angle from the overal rectangular shape
+of the polygon. Usefull when preserving e.g. bay windows on a
+house.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p>polyOrthog: orthogonalized shapely polygon where all angles are 90 or 180 degrees</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>shapely Polygon</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="aerial_conversion.orthogonalise.orthogonalise.rotate_polygon">
+<span class="sig-prename descclassname"><span class="pre">aerial_conversion.orthogonalise.orthogonalise.</span></span><span class="sig-name descname"><span class="pre">rotate_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polySimple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aerial_conversion/orthogonalise/orthogonalise.html#rotate_polygon"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#aerial_conversion.orthogonalise.orthogonalise.rotate_polygon" title="Link to this definition"></a></dt>
+<dd><p>Rotates polygon around its centroid for given angle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a href="#id15"><span class="problematic" id="id16">`</span></a>polySimple: shapely polygon object containing simplified building.</p></li>
+<li><dl class="simple">
+<dt><a href="#id17"><span class="problematic" id="id18">`</span></a>angle: angle of rotation in decimal degrees.</dt><dd><p>Positive = counter-clockwise, Negative = clockwise</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p>bSR: rotated polygon</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>shapely Polygon</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-aerial_conversion.orthogonalise">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-aerial_conversion.orthogonalise" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

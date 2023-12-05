@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to Aerial Conversion documentation! &mdash; Aerial Conversion v1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=95484ca5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Aerial Conversion
+          </a>
+              <div class="version">
+                v1.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Welcome to Aerial Conversion documentation!</a></li>
+<li><a class="reference internal" href="#table-of-contetns">Table of contetns</a></li>
+<li><a class="reference internal" href="#basic-usage">Basic Usage</a><ul>
+<li><a class="reference internal" href="#input-and-output-data-formats">Input and Output Data Formats</a></li>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#dataset">Dataset</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+<li><a class="reference internal" href="#contributing-to-the-project">Contributing to the Project</a><ul>
+<li><a class="reference internal" href="#commit-rules">Commit rules</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#documentation-update">Documentation update</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Aerial Conversion</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to Aerial Conversion documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="welcome-to-aerial-conversion-documentation">
+<h1>Welcome to Aerial Conversion documentation!<a class="headerlink" href="#welcome-to-aerial-conversion-documentation" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>This is an open-source tool enabling interchange between computer vision annotation and GIS data formats. Part of <a class="reference external" href="https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation">PIPE-3956 Aerial Segmentation</a>.
+The code is available on <a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion">GitHub</a>.</p>
+</section>
+<section id="table-of-contetns">
+<h1>Table of contetns<a class="headerlink" href="#table-of-contetns" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="#input-and-output-data-formats">Input and Output Data Formats</a></p></li>
+<li><p><a class="reference external" href="#setup">Setup</a></p></li>
+<li><p><a class="reference external" href="#dataset">Dataset</a></p></li>
+<li><p><a class="reference external" href="#usage">Usage</a></p></li>
+<li><p><a class="reference external" href="#contributing-to-the-project">Contributing to the Project</a></p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="basic-usage">
+<h1>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading"></a></h1>
+<section id="input-and-output-data-formats">
+<h2>Input and Output Data Formats<a class="headerlink" href="#input-and-output-data-formats" title="Link to this heading"></a></h2>
+<p>The repository can convert between the following formats:</p>
+<ul class="simple">
+<li><p>Images and annotations in COCO JSON format.</p></li>
+<li><p>Georeferenced shapefile polygon vector files, with a readme file
+linking to the original web map server or aerial imagery source to be
+rendered.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">aerial</span><span class="o">-</span><span class="n">conversion</span><span class="o">-</span><span class="n">dev</span> <span class="n">python</span><span class="o">==</span><span class="mf">3.9</span>
+
+<span class="n">conda</span> <span class="n">activate</span> <span class="n">aerial</span><span class="o">-</span><span class="n">conversion</span><span class="o">-</span><span class="n">dev</span>
+
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</section>
+<section id="dataset">
+<h2>Dataset<a class="headerlink" href="#dataset" title="Link to this heading"></a></h2>
+<p>A toy dataset has been uploaded to Roboflow. It is a small subset,
+containing Chatswood region, available
+<a class="reference external" href="https://universe.roboflow.com/sih-vpfnf/gis-hd-200x200">here</a>.</p>
+<p>There are multiple versions of this dataset. Please ignore the first
+version. Version 2 and later versions are the ones that are being used.
+The main difference of version 2 and 3 is that <a class="reference external" href="https://universe.roboflow.com/sih-vpfnf/gis-hd-200x200/2">version
+2</a> contains
+90 degree augmentaions, while <a class="reference external" href="https://universe.roboflow.com/sih-vpfnf/gis-hd-200x200/3">version
+3</a> does
+not.</p>
+<p>For implementing this in your code, you can use the following code
+snippet:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">roboflow</span> <span class="kn">import</span> <span class="n">Roboflow</span>
+
+<span class="n">rf</span> <span class="o">=</span> <span class="n">Roboflow</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span> <span class="s1">&#39;your_roboflow_api_key&#39;</span> <span class="p">)</span>
+<span class="n">workspace_name</span> <span class="o">=</span> <span class="s2">&quot;sih-vpfnf&quot;</span>
+<span class="n">dataset_version</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;gis-hd-200x200&quot;</span>
+<span class="n">dataset_download_name</span> <span class="o">=</span> <span class="s2">&quot;coco-segmentation&quot;</span>
+
+<span class="n">project</span> <span class="o">=</span> <span class="n">rf</span><span class="o">.</span><span class="n">workspace</span><span class="p">(</span><span class="n">workspace_name</span><span class="p">)</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="n">dataset_version</span><span class="p">)</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">dataset_download_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>To create tiles from a raster file, use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">aerial_conversion</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">geojson2coco</span> \
+                <span class="o">--</span><span class="n">raster</span><span class="o">-</span><span class="n">file</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">chatswood_hd</span><span class="o">.</span><span class="n">tif</span> \
+                <span class="o">--</span><span class="n">polygon</span><span class="o">-</span><span class="n">file</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">chatswood</span><span class="o">.</span><span class="n">geojson</span> \
+                <span class="o">--</span><span class="n">tile</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">big_tiles</span> \
+                <span class="o">--</span><span class="n">json</span><span class="o">-</span><span class="n">name</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">coco_from_gis_hd</span><span class="o">.</span><span class="n">json</span> \
+                <span class="o">--</span><span class="n">info</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">json</span> \
+                <span class="o">--</span><span class="n">class</span><span class="o">-</span><span class="n">column</span> <span class="n">zone_name</span>
+</pre></div>
+</div>
+<p>To merge multiple COCO JSON files, and yield a geojson file for the
+input raster, use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">aerial_conversion</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">coco2geojson</span> \
+                <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">raster_tiles</span><span class="o">/</span><span class="nb">dir</span> \
+                <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">predictions</span><span class="o">-</span><span class="n">coco</span><span class="o">.</span><span class="n">json</span> \
+                <span class="o">--</span><span class="n">tile</span><span class="o">-</span><span class="n">extension</span> <span class="n">tif</span> \
+                <span class="o">--</span><span class="n">geojson</span><span class="o">-</span><span class="n">output</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">output</span><span class="o">.</span><span class="n">geojson</span> \
+                <span class="o">--</span><span class="n">meta</span><span class="o">-</span><span class="n">name</span> <span class="o">&lt;</span><span class="n">name_of_the_dataset</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">minimum</span><span class="o">-</span><span class="n">rotated</span><span class="o">-</span><span class="n">rectangle</span>
+</pre></div>
+</div>
+<p>To do a batch conversion, when the conversion should be carried on
+multiple input images, use the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">aerial_conversion</span><span class="o">.</span><span class="n">scripts</span><span class="o">.</span><span class="n">batch_coco2geojson</span> \
+                <span class="o">--</span><span class="n">raster</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">rasters</span><span class="o">/</span> \
+                <span class="o">--</span><span class="n">vector</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">geojsons</span><span class="o">/</span> \
+                <span class="o">--</span><span class="n">output</span><span class="o">-</span><span class="nb">dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">outputs</span><span class="o">/</span> \
+                <span class="o">--</span><span class="n">tile</span><span class="o">-</span><span class="n">size</span> <span class="o">&lt;</span><span class="n">size_of_the_tiles</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">class</span><span class="o">-</span><span class="n">column</span> <span class="o">&lt;</span><span class="n">class_column_in_geojsons_to_look_for</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">overlap</span> <span class="o">&lt;</span><span class="n">overlap_in_percentage_between_tiles</span><span class="o">&gt;</span> \
+                <span class="o">--</span><span class="n">pattern</span> <span class="o">&lt;</span><span class="n">a_pattern_to_ensure_raster_names_matches_the_geojsons</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">concatenate</span> <span class="o">&lt;</span><span class="n">whether_to_concatenate_the_output_geojsons_into_one_big_json</span><span class="o">&gt;</span>
+                <span class="o">--</span><span class="n">info</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">json</span> \
+                <span class="o">--</span><span class="n">resume</span> <span class="o">&lt;</span><span class="n">whether_to_resume_the_process_in_case_new_images_are_added</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--raster-dir</span></code> argument is the path to the raster directory. This is a
+necessary argument. Rasters are expected to be in this directory.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--vector-dir</span></code> argument is the path to the vector directory. This is a
+necessary argument. geojsons are expected to be in this directory, with
+matching names with the rasters.</p>
+<p>Please ensure the rasters in the raster directory are named similarly as
+the geojsons. If they only differ in a prefix, you can use the
+<code class="docutils literal notranslate"><span class="pre">--pattern</span></code> argument to specify the prefix. For example, if the
+rasters are named <code class="docutils literal notranslate"><span class="pre">osm_1.tif</span></code>, <code class="docutils literal notranslate"><span class="pre">osm_2.tif</span></code>, and the geojsons are
+named <code class="docutils literal notranslate"><span class="pre">1.geojson</span></code>, <code class="docutils literal notranslate"><span class="pre">2.geojson</span></code>, you can use <code class="docutils literal notranslate"><span class="pre">--pattern</span> <span class="pre">osm_</span></code> to
+ensure the rasters are matched with the geojsons.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--output-dir</span></code> argument is the path to the output directory. This is a
+necessary argument.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--class-column</span></code> argument is also a necessary argument that should be
+provided. If the provided argument is wrong or does not exist, the code
+will create the column with default values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--overlap</span></code> argument is the percentage of overlap between the tiles.
+For example, if the tile size is 200, and the overlap is 0.5, the
+overlap between the tiles will be 100 pixels.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--concatenate</span></code> argument is a store-true argument. If it is set, the
+output geojsons will be concatenated into one big geojson.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--resume</span></code> argument is a store-true argument. If it is set, the code
+will resume the process from the last image that was processed. This is
+useful when new images are added to the raster directory, and the
+process should be resumed from the last image that was processed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--info</span></code> argument is the path to the info json file. This is a
+necessary argument. If the argument is not provided, the code will
+create the info json file with default values.</p>
+<p><code class="docutils literal notranslate"><span class="pre">--tile-size</span></code> argument is the size of the tiles in meters.</p>
+</section>
+<hr class="docutils" />
+<section id="contributing-to-the-project">
+<h2>Contributing to the Project<a class="headerlink" href="#contributing-to-the-project" title="Link to this heading"></a></h2>
+<p>Please make sure to install all the required libraries in the
+<a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/requirements.txt">requirements.txt</a>
+file for development.</p>
+<section id="commit-rules">
+<h3>Commit rules<a class="headerlink" href="#commit-rules" title="Link to this heading"></a></h3>
+<p>In this project, <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> is being used. Hence, please make sure
+you have it in your env by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pre-commit</span></code>.</p>
+<p>Make sure to run pre-commit on each run. You can run it before commit on
+all files to check your code by typing
+<code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span> <span class="pre">--all-files</span> <span class="pre">--verbose</span></code>, without staging your
+pre-commit config. Otherwise, you can run it via <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span></code>
+only, or just envoking it while committing (and failing, and committing
+again).</p>
+<p>Alternatively, to add the hook, after installing pre-commit, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span><span class="o">-</span><span class="n">commit</span> <span class="n">install</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="documentation-update">
+<h2>Documentation update<a class="headerlink" href="#documentation-update" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>To update the documentation, navigate to the
+<a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/">docs</a>
+directory.</p></li>
+<li><p>Remove the old <code class="docutils literal notranslate"><span class="pre">rst</span></code> files from the the docs directory, except
+<code class="docutils literal notranslate"><span class="pre">index.rst</span></code>.</p></li>
+<li><p>Make sure <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> is not empty.</p></li>
+<li><p>Make sure there is a <code class="docutils literal notranslate"><span class="pre">config.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">docs</span></code> directory, containing the root directory, version, and other project details.</p></li>
+<li><p>Navigate to the upper directory: <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">..</span></code>.</p></li>
+<li><p>Input <code class="docutils literal notranslate"><span class="pre">sphinx-apidoc</span> <span class="pre">-o</span> <span class="pre">docs</span> <span class="pre">.</span></code> to regenerate the <code class="docutils literal notranslate"><span class="pre">rst</span></code> files.</p></li>
+<li><p>Navigate back to the <code class="docutils literal notranslate"><span class="pre">docs</span></code> directory.</p></li>
+<li><p>Update the <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> file to include the new <code class="docutils literal notranslate"><span class="pre">rst</span></code> files, if
+required. Usually not needed. (You don’t have to include the submodules.)</p></li>
+<li><p>Then input <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> for updating the html file.</p></li>
+</ul>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<p>For detailed explanation of modules and functions, please see the following pages:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Sydney Informatics Hub (SIH).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

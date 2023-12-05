@@ -47,6 +47,10 @@ jobs:
           git checkout gh-pages
           git pull origin gh-pages
 
+      - name: Delete all files in gh-pages branch
+        run: |
+          rm -rf *
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -54,6 +58,10 @@ jobs:
 
       - name: List directory contents
         run: ls -l
+
+      - name: Cleanup and copy artifacts
+        run: |
+          cp -r doc/_build/html/* doc
 
       - name: Deploy documentation
         run: |

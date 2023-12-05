@@ -27,12 +27,11 @@ jobs:
         run: |
           pip install -r doc/requirements.txt  # Install Sphinx and any other dependencies
 
-          - name: Build documentation
-          run: |
-            cd doc
-            make html
-            cd ..
-          shell: bash
+      - name: Build documentation
+        run: |
+          cd doc
+          make html
+          cd ..
   
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3

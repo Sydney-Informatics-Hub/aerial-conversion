@@ -63,6 +63,10 @@ jobs:
       - name: List directory contents
         run: ls -l
 
+      - name: Fix jeckyll build
+        run: |
+          touch .nojekyll
+
       - name: Deploy documentation
         run: |
           git config --global user.name "${GITHUB_ACTOR}"

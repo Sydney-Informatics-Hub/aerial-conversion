@@ -3,6 +3,10 @@ Open source tools enabling interchange between computer vision annotation and GI
 
 Module documentation is available at [documentation](https://sydney-informatics-hub.github.io/aerial-conversion/).
 
+Source code available at [github](https://github.com/Sydney-Informatics-Hub/aerial-conversion).
+
+Releases available at [github](https://github.com/Sydney-Informatics-Hub/aerial-conversion/releases).
+
 ---
 
 ## Input and Output Data Formats

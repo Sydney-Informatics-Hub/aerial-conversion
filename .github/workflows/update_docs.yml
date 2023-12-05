@@ -44,7 +44,7 @@ jobs:
 
       - name: Delete the created files in the branch before checking out gh-pages
         run: |
-          rm -rf doc/_build/html/*
+          rm -rf doc/*
 
       - name: Checkout gh-pages branch
         run: |

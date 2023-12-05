@@ -42,10 +42,6 @@ jobs:
       - name: List directory contents Ffor debugging doc generation
         run: ls -l doc/_build/html/
 
-      - name: Delete the created files in the branch before checking out gh-pages
-        run: |
-          rm -rf doc/*
-
       - name: Checkout gh-pages branch
         run: |
           git checkout gh-pages

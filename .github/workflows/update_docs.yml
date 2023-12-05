@@ -13,26 +13,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Fetch all history for docs_source
-
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'  # Replace '3.x' with your Python version
 
       - name: Install dependencies
         run: |
-          pip install -r docs_source/requirements.txt  # Install Sphinx and any other dependencies
+          pip install -r doc/requirements.txt  # Install Sphinx and any other dependencies
 
-      - name: Build documentation
+      - name: Sphinx build
         run: |
-          cd docs_source
-          make html  # Replace 'html' with your desired output format (e.g., html, dirhtml, etc.)
-          cd ..
-
+          sphinx-build doc _build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

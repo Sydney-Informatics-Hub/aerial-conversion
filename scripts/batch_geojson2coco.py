@@ -91,8 +91,7 @@ def process_single(args):
 
                 # Construct the command
                 command = [
-                    "python",
-                    "scripts/geojson2coco.py",
+                    "geojson2coco",
                     "--raster-file",
                     os.path.join(args.raster_dir, raster_file),
                     "--polygon-file",
@@ -102,7 +101,7 @@ def process_single(args):
                     "--json-name",
                     json_file,
                     "--offset",
-                    overlap,
+                    str(overlap),
                     "--info",
                     info_file,
                     "--tile-size",
@@ -110,7 +109,6 @@ def process_single(args):
                     "--class-column",
                     args.class_column,
                 ]
-
                 try:
                     # Run the command
                     subprocess.run(command, capture_output=True, text=True, check=True)
@@ -133,7 +131,6 @@ def process_single(args):
         pickle.dump(error, f)
 
     return individual_coco_datasets
-
 
 
 def main(args=None):

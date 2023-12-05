@@ -58,7 +58,7 @@
 <li><a class="reference internal" href="#commit-rules">Commit rules</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#documentation-update">Documentation update</a></li>
+<li><a class="reference internal" href="#documentation-manual-update">Documentation manual update</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -92,8 +92,8 @@
 <h1>Welcome to Aerial Conversion documentation!<a class="headerlink" href="#welcome-to-aerial-conversion-documentation" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<p>This is an open-source tool enabling interchange between computer vision annotation and GIS data formats. Part of <a class="reference external" href="https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation">PIPE-3956 Aerial Segmentation</a>.
-The code is available on <a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion">GitHub</a>.</p>
+<p>This is an open-source tool enabling interchange between computer vision annotation and GIS data formats. Part of <a class="reference external" href="https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation">PIPE-3956 Aerial Segmentation</a>.</p>
+<p>The source code is available on <a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion">GitHub</a>.</p>
 </section>
 <section id="table-of-contetns">
 <h1>Table of contetns<a class="headerlink" href="#table-of-contetns" title="Link to this heading"></a></h1>
@@ -246,19 +246,23 @@ again).</p>
 </div>
 </section>
 </section>
-<section id="documentation-update">
-<h2>Documentation update<a class="headerlink" href="#documentation-update" title="Link to this heading"></a></h2>
+<section id="documentation-manual-update">
+<h2>Documentation manual update<a class="headerlink" href="#documentation-manual-update" title="Link to this heading"></a></h2>
+<p>In case of new modules being added, the following update procedure can be followed:</p>
 <ul class="simple">
 <li><p>To update the documentation, navigate to the
-<a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/">docs</a>
+<a class="reference external" href="https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/doc/">doc</a>
 directory.</p></li>
 <li><p>Remove the old <code class="docutils literal notranslate"><span class="pre">rst</span></code> files from the the docs directory, except
 <code class="docutils literal notranslate"><span class="pre">index.rst</span></code>.</p></li>
 <li><p>Make sure <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> is not empty.</p></li>
 <li><p>Make sure there is a <code class="docutils literal notranslate"><span class="pre">config.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">docs</span></code> directory, containing the root directory, version, and other project details.</p></li>
 <li><p>Navigate to the upper directory: <code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">..</span></code>.</p></li>
-<li><p>Input <code class="docutils literal notranslate"><span class="pre">sphinx-apidoc</span> <span class="pre">-o</span> <span class="pre">docs</span> <span class="pre">.</span></code> to regenerate the <code class="docutils literal notranslate"><span class="pre">rst</span></code> files.</p></li>
-<li><p>Navigate back to the <code class="docutils literal notranslate"><span class="pre">docs</span></code> directory.</p></li>
+<li><p>Input <code class="docutils literal notranslate"><span class="pre">sphinx-apidoc</span> <span class="pre">-o</span> <span class="pre">doc</span> <span class="pre">.</span></code> to regenerate the <code class="docutils literal notranslate"><span class="pre">rst</span></code> files.</p></li>
+</ul>
+<p>The next steps are not required, since they are automatically done by github actions. However, they are included here for completeness.</p>
+<ul class="simple">
+<li><p>Navigate back to the <code class="docutils literal notranslate"><span class="pre">doc</span></code> directory.</p></li>
 <li><p>Update the <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> file to include the new <code class="docutils literal notranslate"><span class="pre">rst</span></code> files, if
 required. Usually not needed. (You don’t have to include the submodules.)</p></li>
 <li><p>Then input <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> for updating the html file.</p></li>

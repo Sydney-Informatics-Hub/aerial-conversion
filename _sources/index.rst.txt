@@ -12,10 +12,8 @@ Welcome to Aerial Conversion documentation!
 
 
 This is an open-source tool enabling interchange between computer vision annotation and GIS data formats. Part of `PIPE-3956 Aerial Segmentation <https://github.com/Sydney-Informatics-Hub/PIPE-3956-aerial-segmentation>`__. 
-The code is available on `GitHub <https://github.com/Sydney-Informatics-Hub/aerial-conversion>`__.
 
-
-
+The source code is available on `GitHub <https://github.com/Sydney-Informatics-Hub/aerial-conversion>`__.
 
 
 
@@ -215,19 +213,24 @@ Alternatively, to add the hook, after installing pre-commit, run:
 
 
 
-Documentation update
+Documentation manual update
 ---------------------
 
+In case of new modules being added, the following update procedure can be followed:
+
 -  To update the documentation, navigate to the
-   `docs <https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/>`__
+   `doc <https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/doc/>`__
    directory.
 -  Remove the old ``rst`` files from the the docs directory, except
    ``index.rst``. 
 -  Make sure ``index.rst`` is not empty.
 -  Make sure there is a ``config.py`` file in the ``docs`` directory, containing the root directory, version, and other project details.
 -  Navigate to the upper directory: ``cd ..``.
--  Input ``sphinx-apidoc -o docs .`` to regenerate the ``rst`` files.
--  Navigate back to the ``docs`` directory.
+-  Input ``sphinx-apidoc -o doc .`` to regenerate the ``rst`` files.
+
+The next steps are not required, since they are automatically done by github actions. However, they are included here for completeness.
+
+-  Navigate back to the ``doc`` directory.
 -  Update the ``index.rst`` file to include the new ``rst`` files, if
    required. Usually not needed. (You don’t have to include the submodules.)
 -  Then input ``make html`` for updating the html file.

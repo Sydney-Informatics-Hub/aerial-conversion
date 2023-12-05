@@ -40,9 +40,9 @@ jobs:
           path: doc/_build/html/
 
       - name: Checkout gh-pages branch
-        uses: actions/checkout@v3
-        with:
-          ref: gh-pages
+        run: |
+          git checkout gh-pages
+          git pull origin gh-pages
 
       - name: Download artifacts
         uses: actions/download-artifact@v3

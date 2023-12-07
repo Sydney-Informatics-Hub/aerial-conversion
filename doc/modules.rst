@@ -6,4 +6,3 @@ aerial-conversion
 
    aerial_conversion
    scripts
-   setup

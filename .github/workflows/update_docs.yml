@@ -39,7 +39,7 @@ jobs:
           name: htmldoc
           path: doc/_build/html/
 
-      - name: List directory contents Ffor debugging doc generation
+      - name: List directory contents for debugging doc generation
         run: ls -l doc/_build/html/
 
       - name: Checkout gh-pages branch

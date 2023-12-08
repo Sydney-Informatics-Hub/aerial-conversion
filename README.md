@@ -102,7 +102,7 @@ python -m aerial_conversion.scripts.coco2geojson \
 To do a batch conversion, when the conversion should be carried on multiple input images, use the following command:
 
 ```
-python -m aerial_conversion.scripts.batch_coco2geojson \
+python -m aerial_conversion.scripts.batch_geojson2coco \
                 --raster-dir /path/to/data/rasters/ \
                 --vector-dir /path/to/data/geojsons/ \
                 --output-dir /path/to/data/outputs/ \

@@ -169,8 +169,7 @@
 
                 <span class="c1"># Construct the command</span>
                 <span class="n">command</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="s2">&quot;python&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;scripts/geojson2coco.py&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;geojson2coco&quot;</span><span class="p">,</span>
                     <span class="s2">&quot;--raster-file&quot;</span><span class="p">,</span>
                     <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">raster_dir</span><span class="p">,</span> <span class="n">raster_file</span><span class="p">),</span>
                     <span class="s2">&quot;--polygon-file&quot;</span><span class="p">,</span>
@@ -180,7 +179,7 @@
                     <span class="s2">&quot;--json-name&quot;</span><span class="p">,</span>
                     <span class="n">json_file</span><span class="p">,</span>
                     <span class="s2">&quot;--offset&quot;</span><span class="p">,</span>
-                    <span class="n">overlap</span><span class="p">,</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">overlap</span><span class="p">),</span>
                     <span class="s2">&quot;--info&quot;</span><span class="p">,</span>
                     <span class="n">info_file</span><span class="p">,</span>
                     <span class="s2">&quot;--tile-size&quot;</span><span class="p">,</span>
@@ -188,7 +187,6 @@
                     <span class="s2">&quot;--class-column&quot;</span><span class="p">,</span>
                     <span class="n">args</span><span class="o">.</span><span class="n">class_column</span><span class="p">,</span>
                 <span class="p">]</span>
-
                 <span class="k">try</span><span class="p">:</span>
                     <span class="c1"># Run the command</span>
                     <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -211,7 +209,6 @@
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">individual_coco_datasets</span></div>
-
 
 
 

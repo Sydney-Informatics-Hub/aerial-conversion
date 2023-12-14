@@ -107,6 +107,7 @@ def make_category_object(
     categories_json = []
 
     log.info(f"Making category object with {len(classes)} classes.")
+    log.info(f"The classes df is {str(classes)}")
 
     for _, row in classes.iterrows():
         categories_json.append(

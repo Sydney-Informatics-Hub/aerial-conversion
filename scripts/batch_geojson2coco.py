@@ -300,13 +300,13 @@ def main(args=None):
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")
     print()
-    print("| Raster File | Vector File | JSON File |")
-    print("|-------------|-------------|-----------|")
+    print("| Raster File\t| Vector File\t| JSON File\t|")
+    print("|------------\t|------------\t|----------\t|")
     for coco_file in individual_coco_datasets:
         pair_dir = os.path.dirname(coco_file)
         raster_file = os.path.basename(pair_dir) + ".tif"
         vector_file = os.path.basename(pair_dir) + ".geojson"
-        print(f"| {raster_file} | {vector_file} | {coco_file} |")
+        print(f"| {raster_file}\t| {vector_file}\t| {coco_file}\t|")
 
     # Concatenate COCO datasets if the --concatenate argument is enabled
     if args.concatenate:

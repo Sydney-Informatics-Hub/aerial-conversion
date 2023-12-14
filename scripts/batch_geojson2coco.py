@@ -201,20 +201,7 @@ def process_single(args):
     return individual_coco_datasets
 
 
-def main(args=None):
-    """Convert raster and vector pairs to COCO JSON format.
-
-    Args:
-        args: Command-line arguments.
-
-    Usage Example:
-        # Convert raster and vector pairs without concatenation
-        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir
-
-        # Convert raster and vector pairs with concatenation
-        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
-    """
-
+def parse_arguments(args):
     parser = argparse.ArgumentParser(
         description="Convert raster and vector pairs to COCO JSON format."
     )
@@ -272,7 +259,24 @@ def main(args=None):
         help="If the raster crs is not defined in the raster file, you can provide it here. It will be used to crop the geojson file to the extent of the raster file.",
     )
 
-    args = parser.parse_args(args)
+    return parser.parse_args(args)
+
+
+def main(args=None):
+    """Convert raster and vector pairs to COCO JSON format.
+
+    Args:
+        args: Command-line arguments.
+
+    Usage Example:
+        # Convert raster and vector pairs without concatenation
+        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir
+
+        # Convert raster and vector pairs with concatenation
+        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate
+    """
+
+    args = parse_arguments(args)
 
     # Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file
     if not os.path.isdir(args.vector_dir):

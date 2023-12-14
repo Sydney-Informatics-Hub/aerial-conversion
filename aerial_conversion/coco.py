@@ -100,9 +100,13 @@ def make_category_object(
 
     # TODO: Implement way to read supercategory data.
 
+    log.debug(f"Making category object from {class_column} column.")
+
     classes = pd.DataFrame(geojson[class_column].unique(), columns=["class"])
     classes["class_id"] = classes.index
     categories_json = []
+
+    log.info(f"Making category object with {len(classes)} classes.")
 
     for _, row in classes.iterrows():
         categories_json.append(

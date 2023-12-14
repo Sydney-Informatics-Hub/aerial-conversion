@@ -63,8 +63,12 @@ def crop_and_save_geojson(
     cropped_dir = os.path.join(
         os.path.dirname(geojson_path), os.path.basename(geojson_path).split(".")[0]
     )
+
+    # Create the cropped directory
+    os.makedirs(cropped_dir, exist_ok=True)
+
     # Loop through each raster file
-    for raster_file in os.listdir(raster_dir):
+    for raster_file in tqdm(os.listdir(raster_dir)):
         if raster_file.endswith(raster_extension):
             raster_path = os.path.join(raster_dir, raster_file)
 
@@ -113,7 +117,7 @@ def process_single(args):
         # Check if the file is a GeoTIFF
         if raster_file.endswith(".tif"):
             # Get the file name without extension
-            file_name = os.path.splitext(raster_file)[0].split("_")[0]
+            file_name = os.path.basename(raster_file).split(".")[0]
             if file_name in already_processed:
                 print(f"Skipping {file_name} as it is already processed.")
                 # add the json file to the list
@@ -123,6 +127,9 @@ def process_single(args):
                 continue
             # Construct the vector file name
             vector_file = file_name + args.pattern + ".geojson"
+
+            # print(f"Processing {vector_file} | {raster_file}")
+
             vector_path = os.path.join(args.vector_dir, vector_file)
 
             # Check if the vector file exists
@@ -220,7 +227,7 @@ def main(args=None):
         "--output-dir", required=True, help="Path to the output directory."
     )
     parser.add_argument(
-        "--tile-size", type=int, default=100, help="Tile width/height in meters."
+        "--tile-size", type=float, default=100, help="Tile width/height in meters."
     )
     parser.add_argument(
         "--class-column",
@@ -235,11 +242,11 @@ def main(args=None):
     parser.add_argument(
         "--pattern",
         default="",
-        help="Pattern to match the vector file name. Defaults to _building.",
+        help="Pattern to match the vector file name. Defaults to %(default)s.",
     )
     parser.add_argument(
         "--concatenate",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         help="Concatenate individual COCO datasets into one.",
     )
     parser.add_argument(
@@ -248,7 +255,7 @@ def main(args=None):
     )
     parser.add_argument(
         "--resume",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         help="Resume a batch job from an output directory.",
     )
     parser.add_argument(
@@ -266,12 +273,6 @@ def main(args=None):
 
     args = parser.parse_args(args)
 
-    # Specify the output directory
-    if args.no_workers > 1:
-        raise NotImplementedError("Parallel processing not implemented yet.")
-    else:
-        individual_coco_datasets = process_single(args)
-
     # Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file
     if not os.path.isdir(args.vector_dir):
         if args.vector_dir.endswith(".geojson"):
@@ -288,6 +289,13 @@ def main(args=None):
             raise ValueError(
                 "The vector-dir is not a directory, and is not a geojson file. Please provide a directory or a geojson file."
             )
+
+        # Specify the output directory
+    if args.no_workers > 1:
+        raise NotImplementedError("Parallel processing not implemented yet.")
+    else:
+        print("Running geojson2coco.py over raster and vector pairs:")
+        individual_coco_datasets = process_single(args)
 
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")

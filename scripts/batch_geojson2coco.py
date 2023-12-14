@@ -152,8 +152,9 @@ def process_single(args):
                 # Specify the overlap
                 overlap = args.overlap
 
+                print("The class column is: ", args.class_column)
                 print(
-                    f"Processing {vector_file} | {raster_file} | {info_file} > > > > {json_file}"
+                    f"Processing {vector_file}\t| {raster_file}\t| {info_file} > > > > {json_file}"
                 )
 
                 # Construct the command

@@ -22,6 +22,7 @@ from aerial_conversion.coco import (
 from aerial_conversion.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
 from aerial_conversion.tiles import save_tiles
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
@@ -208,11 +209,14 @@ def main(args=None):
     # TODO: make less hacky
     if args.class_column not in geojson.columns:
         # If it doesn't exist, create a new column with the specified name and fill it with the string value of class-column argument
+        log.error(
+            f"Class column {args.class_column} not found in GeoJSON. Will create one instead..."
+        )
         geojson[args.class_column] = args.class_column
     geojson["class_id"] = geojson[class_column].factorize()[0]
-    print("Class column is: ", class_column)
-    print("Class id is: ", geojson["class_id"])
-    print("Trim class is: ", trim_class)
+    log.debug("Class column is: ", class_column)
+    log.debug("Class id is: ", geojson["class_id"])
+    log.debug("Trim class is: ", trim_class)
     categories_json = make_category_object(geojson, class_column, trim_class)
 
     # If license is not supplied, use MIT by default

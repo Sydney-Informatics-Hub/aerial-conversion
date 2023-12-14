@@ -3,6 +3,7 @@
 a series of COCO datasets."""
 import argparse
 import json
+import logging
 import os
 import pickle
 import subprocess
@@ -14,7 +15,11 @@ from pycocotools.coco import COCO
 from shapely.geometry import box
 from tqdm import tqdm
 
-# from subprocess import Popen
+from aerial_conversion.coordinates import wkt_parser
+
+# set up logging
+logging.basicConfig(level=logging.WARN)
+logger = logging.getLogger(__name__)
 
 
 def resume(output_dir: str) -> list:
@@ -40,18 +45,24 @@ def resume(output_dir: str) -> list:
     return processed
 
 
-def crop_and_save_geojson(raster_dir, geojson_path, raster_extension=".tif"):
+def crop_and_save_geojson(
+    raster_dir: str, geojson_path: str, raster_extension: str = ".tif", user_crs=None
+):
     """Crop a GeoJSON file to the extent of a raster file and save it.
 
     Args:
         raster_dir (str): Path to the directory containing the raster files.
         geojson_path (str): Path to the GeoJSON file.
         raster_extension (str, optional): Extension of the raster files. Defaults to '.tif'.
+        user_crs ([type], optional): CRS of the raster files. Defaults to None.
     """
 
     # Read the GeoJSON file
     geojson = gpd.read_file(geojson_path)
 
+    cropped_dir = os.path.join(
+        os.path.dirname(geojson_path), os.path.basename(geojson_path).split(".")[0]
+    )
     # Loop through each raster file
     for raster_file in os.listdir(raster_dir):
         if raster_file.endswith(raster_extension):
@@ -61,20 +72,29 @@ def crop_and_save_geojson(raster_dir, geojson_path, raster_extension=".tif"):
             with rasterio.open(raster_path) as src:
                 left, bottom, right, top = src.bounds
 
+            # Find the crs of the raster
+            if user_crs is None:
+                user_crs = src.crs.to_wkt()
+                user_crs = wkt_parser(user_crs)
+
             # Create a bounding box from the raster bounds
             bbox = box(left, bottom, right, top)
+
+            # Reproject the GeoJSON to the CRS of the raster
+            geojson_crs = geojson.crs
+            if geojson_crs != user_crs:
+                geojson = geojson.to_crs(user_crs)
 
             # Crop the GeoJSON to the extent of the raster
             cropped_geojson = geojson[geojson.geometry.intersects(bbox)]
 
             # Save the cropped GeoJSON with the same naming pattern
-            cropped_geojson_filename = (
-                os.path.dirname(geojson_path)
-                + "/"
-                + os.path.basename(raster_file).split(".")[0]
-                + ".geojson"
+            cropped_geojson_filename = os.path.join(
+                cropped_dir, os.path.basename(raster_file).split(".")[0] + ".geojson"
             )
             cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
+
+    return cropped_dir
 
 
 def process_single(args):
@@ -237,6 +257,12 @@ def main(args=None):
         default=1,
         help="Number of workers to use for parallel processing.",
     )
+    parser.add_argument(
+        "--user_assumed_raster_crs",
+        type=str,
+        default=None,
+        help="If the raster crs is not defined in the raster file, you can provide it here. It will be used to crop the geojson file to the extent of the raster file.",
+    )
 
     args = parser.parse_args(args)
 
@@ -245,6 +271,23 @@ def main(args=None):
         raise NotImplementedError("Parallel processing not implemented yet.")
     else:
         individual_coco_datasets = process_single(args)
+
+    # Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file
+    if not os.path.isdir(args.vector_dir):
+        if args.vector_dir.endswith(".geojson"):
+            logger.info(
+                "The vector-dir is not a directory, and is a geojson file. Cropping it to the extent of the raster file."
+            )
+            args.vector_dir = crop_and_save_geojson(
+                args.raster_dir,
+                args.vector_dir,
+                raster_extension=".tif",
+                user_crs=args.user_assumed_raster_crs,
+            )
+        else:
+            raise ValueError(
+                "The vector-dir is not a directory, and is not a geojson file. Please provide a directory or a geojson file."
+            )
 
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")

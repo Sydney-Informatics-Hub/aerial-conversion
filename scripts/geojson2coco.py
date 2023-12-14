@@ -214,9 +214,9 @@ def main(args=None):
         )
         geojson[args.class_column] = args.class_column
     geojson["class_id"] = geojson[class_column].factorize()[0]
-    log.debug("Class column is: ", class_column)
-    log.debug("Class id is: ", geojson["class_id"])
-    log.debug("Trim class is: ", trim_class)
+    log.debug("Class column is: %s", class_column)
+    log.debug("Class id is: %s", geojson["class_id"])
+    log.debug("Trim class is: %s", trim_class)
     categories_json = make_category_object(geojson, class_column, trim_class)
 
     # If license is not supplied, use MIT by default

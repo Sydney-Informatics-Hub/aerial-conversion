@@ -15,6 +15,7 @@ from shapely.geometry import Polygon
 
 from .orthogonalise import orthogonalise
 
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
@@ -70,7 +71,7 @@ def make_category(
     Returns:
         category (dict): COCO category object
     """
-
+    log.debug(f"Making category for {class_name} with ID {class_id}.")
     category = {
         "supercategory": supercategory,
         "id": int(class_id),

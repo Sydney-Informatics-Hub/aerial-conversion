@@ -15,7 +15,7 @@ from shapely.geometry import Polygon
 
 from .orthogonalise import orthogonalise
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
 

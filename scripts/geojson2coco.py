@@ -67,7 +67,7 @@ def main(args=None):
     ap.add_argument(
         "--tile-size",
         default=1000,
-        type=int,
+        type=float,
         help="Int length in meters of square tiles to generate from raster. Defaults to 1000 meters.",
     )
     ap.add_argument(

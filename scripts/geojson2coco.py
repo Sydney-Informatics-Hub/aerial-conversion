@@ -210,6 +210,9 @@ def main(args=None):
         # If it doesn't exist, create a new column with the specified name and fill it with the string value of class-column argument
         geojson[args.class_column] = args.class_column
     geojson["class_id"] = geojson[class_column].factorize()[0]
+    print("Class column is: ", class_column)
+    print("Class id is: ", geojson["class_id"])
+    print("Trim class is: ", trim_class)
     categories_json = make_category_object(geojson, class_column, trim_class)
 
     # If license is not supplied, use MIT by default

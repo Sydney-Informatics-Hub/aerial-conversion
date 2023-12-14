@@ -22,7 +22,7 @@ from aerial_conversion.coco import (
 from aerial_conversion.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
 from aerial_conversion.tiles import save_tiles
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
 

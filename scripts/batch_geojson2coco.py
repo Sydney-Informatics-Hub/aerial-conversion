@@ -7,8 +7,11 @@ import os
 import pickle
 import subprocess
 
+import geopandas as gpd
 import pandas as pd
+import rasterio
 from pycocotools.coco import COCO
+from shapely.geometry import box
 from tqdm import tqdm
 
 # from subprocess import Popen
@@ -35,6 +38,43 @@ def resume(output_dir: str) -> list:
                 processed.append(sub_dir)
 
     return processed
+
+
+def crop_and_save_geojson(raster_dir, geojson_path, raster_extension=".tif"):
+    """Crop a GeoJSON file to the extent of a raster file and save it.
+
+    Args:
+        raster_dir (str): Path to the directory containing the raster files.
+        geojson_path (str): Path to the GeoJSON file.
+        raster_extension (str, optional): Extension of the raster files. Defaults to '.tif'.
+    """
+
+    # Read the GeoJSON file
+    geojson = gpd.read_file(geojson_path)
+
+    # Loop through each raster file
+    for raster_file in os.listdir(raster_dir):
+        if raster_file.endswith(raster_extension):
+            raster_path = os.path.join(raster_dir, raster_file)
+
+            # Open the raster file and get its bounds
+            with rasterio.open(raster_path) as src:
+                left, bottom, right, top = src.bounds
+
+            # Create a bounding box from the raster bounds
+            bbox = box(left, bottom, right, top)
+
+            # Crop the GeoJSON to the extent of the raster
+            cropped_geojson = geojson[geojson.geometry.intersects(bbox)]
+
+            # Save the cropped GeoJSON with the same naming pattern
+            cropped_geojson_filename = (
+                os.path.dirname(geojson_path)
+                + "/"
+                + os.path.basename(raster_file).split(".")[0]
+                + ".geojson"
+            )
+            cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
 
 
 def process_single(args):

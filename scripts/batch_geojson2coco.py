@@ -67,6 +67,7 @@ def crop_and_save_geojson(
     # Create the cropped directory
     os.makedirs(cropped_dir, exist_ok=True)
 
+    print(f"Cropping {geojson_path} to the extent of the raster files.")
     # Loop through each raster file
     for raster_file in tqdm(os.listdir(raster_dir)):
         if raster_file.endswith(raster_extension):
@@ -102,6 +103,7 @@ def crop_and_save_geojson(
 
 
 def process_single(args):
+    """The main script with a sinle threaded implementation."""
     output_dir = args.output_dir
 
     individual_coco_datasets = []  # List to store individual COCO datasets

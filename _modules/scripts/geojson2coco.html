@@ -95,6 +95,7 @@
 <span class="kn">from</span> <span class="nn">aerial_conversion.coordinates</span> <span class="kn">import</span> <span class="n">pixel_polygons_for_raster_tiles</span><span class="p">,</span> <span class="n">wkt_parser</span>
 <span class="kn">from</span> <span class="nn">aerial_conversion.tiles</span> <span class="kn">import</span> <span class="n">save_tiles</span>
 
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
@@ -145,7 +146,7 @@
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--tile-size&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Int length in meters of square tiles to generate from raster. Defaults to 1000 meters.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
@@ -236,6 +237,11 @@
     <span class="n">geojson_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">polygon_file</span>
     <span class="n">out_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_dir</span>
     <span class="n">tile_size</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_size</span>
+    <span class="c1"># change tile size to float from string</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tile_size</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tile_size</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
     <span class="n">user_crs</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">crs</span>
     <span class="n">class_column</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span>
     <span class="n">trim_class</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">trim_class</span>
@@ -278,11 +284,17 @@
 
     <span class="c1"># Create class_id for category mapping</span>
     <span class="c1"># Check if the specified class column exists</span>
-    <span class="c1">#TODO: make less hacky</span>
+    <span class="c1"># TODO: make less hacky</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geojson</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="c1"># If it doesn&#39;t exist, create a new column with the specified name and fill it with the string value of class-column argument</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Class column </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">class_column</span><span class="si">}</span><span class="s2"> not found in GeoJSON. Will create one instead...&quot;</span>
+        <span class="p">)</span>
         <span class="n">geojson</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">class_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span>
     <span class="n">geojson</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span><span class="o">.</span><span class="n">factorize</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Class column is: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">class_column</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Class id is: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geojson</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">])</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trim class is: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">trim_class</span><span class="p">)</span>
     <span class="n">categories_json</span> <span class="o">=</span> <span class="n">make_category_object</span><span class="p">(</span><span class="n">geojson</span><span class="p">,</span> <span class="n">class_column</span><span class="p">,</span> <span class="n">trim_class</span><span class="p">)</span>
 
     <span class="c1"># If license is not supplied, use MIT by default</span>

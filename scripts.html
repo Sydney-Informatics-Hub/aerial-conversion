@@ -50,7 +50,9 @@
 <li><a class="reference internal" href="#">scripts package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-scripts.batch_geojson2coco">scripts.batch_geojson2coco module</a><ul>
+<li><a class="reference internal" href="#scripts.batch_geojson2coco.crop_and_save_geojson"><code class="docutils literal notranslate"><span class="pre">crop_and_save_geojson()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.batch_geojson2coco.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.batch_geojson2coco.parse_arguments"><code class="docutils literal notranslate"><span class="pre">parse_arguments()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.batch_geojson2coco.process_single"><code class="docutils literal notranslate"><span class="pre">process_single()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.batch_geojson2coco.resume"><code class="docutils literal notranslate"><span class="pre">resume()</span></code></a></li>
 </ul>
@@ -106,6 +108,22 @@
 <p>This script supports batch conversion of paired geojson and raster data into
 a series of COCO datasets.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="scripts.batch_geojson2coco.crop_and_save_geojson">
+<span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">crop_and_save_geojson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geojson_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raster_extension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.tif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_crs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#crop_and_save_geojson"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.crop_and_save_geojson" title="Link to this definition"></a></dt>
+<dd><p>Crop a GeoJSON file to the extent of a raster file and save it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raster_dir</strong> (<em>str</em>) – Path to the directory containing the raster files.</p></li>
+<li><p><strong>geojson_path</strong> (<em>str</em>) – Path to the GeoJSON file.</p></li>
+<li><p><strong>raster_extension</strong> (<em>str</em><em>, </em><em>optional</em>) – Extension of the raster files. Defaults to ‘.tif’.</p></li>
+<li><p><strong>user_crs</strong> (<em>[</em><em>type</em><em>]</em><em>, </em><em>optional</em>) – CRS of the raster files. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="scripts.batch_geojson2coco.main">
 <span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.main" title="Link to this definition"></a></dt>
 <dd><p>Convert raster and vector pairs to COCO JSON format.</p>
@@ -124,9 +142,15 @@ python batch_geojson2coco.py –raster-dir /path/to/raster_dir –vector-dir /pa
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="scripts.batch_geojson2coco.parse_arguments">
+<span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">parse_arguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#parse_arguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.parse_arguments" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="scripts.batch_geojson2coco.process_single">
 <span class="sig-prename descclassname"><span class="pre">scripts.batch_geojson2coco.</span></span><span class="sig-name descname"><span class="pre">process_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/batch_geojson2coco.html#process_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.batch_geojson2coco.process_single" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>The main script with a sinle threaded implementation.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="scripts.batch_geojson2coco.resume">

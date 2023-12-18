@@ -88,6 +88,7 @@
 
 <span class="kn">from</span> <span class="nn">.orthogonalise</span> <span class="kn">import</span> <span class="n">orthogonalise</span>
 
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
@@ -166,7 +167,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        category (dict): COCO category object</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Making category for </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2"> with ID </span><span class="si">{</span><span class="n">class_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="n">category</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;supercategory&quot;</span><span class="p">:</span> <span class="n">supercategory</span><span class="p">,</span>
         <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">class_id</span><span class="p">),</span>
@@ -198,9 +199,14 @@
 
     <span class="c1"># TODO: Implement way to read supercategory data.</span>
 
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Making category object from </span><span class="si">{</span><span class="n">class_column</span><span class="si">}</span><span class="s2"> column.&quot;</span><span class="p">)</span>
+
     <span class="n">classes</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">])</span>
     <span class="n">classes</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">classes</span><span class="o">.</span><span class="n">index</span>
     <span class="n">categories_json</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Making category object with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span><span class="si">}</span><span class="s2"> classes.&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The classes df is </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">classes</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
         <span class="n">categories_json</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>

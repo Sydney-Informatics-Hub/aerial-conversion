@@ -76,15 +76,23 @@
 <span class="sd">a series of COCO datasets.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">rasterio</span>
 <span class="kn">from</span> <span class="nn">pycocotools.coco</span> <span class="kn">import</span> <span class="n">COCO</span>
+<span class="kn">from</span> <span class="nn">shapely.geometry</span> <span class="kn">import</span> <span class="n">box</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="c1"># from subprocess import Popen</span>
+<span class="kn">from</span> <span class="nn">aerial_conversion.coordinates</span> <span class="kn">import</span> <span class="n">wkt_parser</span>
+
+<span class="c1"># set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARN</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="resume">
@@ -102,6 +110,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">processed</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Check if the output directory does not exist, then return an empty list</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">processed</span>
+    
     <span class="k">for</span> <span class="n">sub_dir</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
         <span class="c1"># Check for all subdirs</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">sub_dir</span><span class="p">)):</span>
@@ -113,9 +125,70 @@
 
 
 
+<div class="viewcode-block" id="crop_and_save_geojson">
+<a class="viewcode-back" href="../../scripts.html#scripts.batch_geojson2coco.crop_and_save_geojson">[docs]</a>
+<span class="k">def</span> <span class="nf">crop_and_save_geojson</span><span class="p">(</span>
+    <span class="n">raster_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">geojson_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">raster_extension</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.tif&quot;</span><span class="p">,</span> <span class="n">user_crs</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Crop a GeoJSON file to the extent of a raster file and save it.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        raster_dir (str): Path to the directory containing the raster files.</span>
+<span class="sd">        geojson_path (str): Path to the GeoJSON file.</span>
+<span class="sd">        raster_extension (str, optional): Extension of the raster files. Defaults to &#39;.tif&#39;.</span>
+<span class="sd">        user_crs ([type], optional): CRS of the raster files. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read the GeoJSON file</span>
+    <span class="n">geojson</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">)</span>
+
+    <span class="n">cropped_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Create the cropped directory</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">cropped_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cropping </span><span class="si">{</span><span class="n">geojson_path</span><span class="si">}</span><span class="s2"> to the extent of the raster files.&quot;</span><span class="p">)</span>
+    <span class="c1"># Loop through each raster file</span>
+    <span class="k">for</span> <span class="n">raster_file</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">raster_dir</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">raster_file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">raster_extension</span><span class="p">):</span>
+            <span class="n">raster_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">raster_dir</span><span class="p">,</span> <span class="n">raster_file</span><span class="p">)</span>
+
+            <span class="c1"># Open the raster file and get its bounds</span>
+            <span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">raster_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+                <span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">bounds</span>
+
+            <span class="c1"># Find the crs of the raster</span>
+            <span class="k">if</span> <span class="n">user_crs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">user_crs</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="o">.</span><span class="n">to_wkt</span><span class="p">()</span>
+                <span class="n">user_crs</span> <span class="o">=</span> <span class="n">wkt_parser</span><span class="p">(</span><span class="n">user_crs</span><span class="p">)</span>
+
+            <span class="c1"># Create a bounding box from the raster bounds</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">box</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">top</span><span class="p">)</span>
+
+            <span class="c1"># Reproject the GeoJSON to the CRS of the raster</span>
+            <span class="n">geojson_crs</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">crs</span>
+            <span class="k">if</span> <span class="n">geojson_crs</span> <span class="o">!=</span> <span class="n">user_crs</span><span class="p">:</span>
+                <span class="n">geojson</span> <span class="o">=</span> <span class="n">geojson</span><span class="o">.</span><span class="n">to_crs</span><span class="p">(</span><span class="n">user_crs</span><span class="p">)</span>
+
+            <span class="c1"># Crop the GeoJSON to the extent of the raster</span>
+            <span class="n">cropped_geojson</span> <span class="o">=</span> <span class="n">geojson</span><span class="p">[</span><span class="n">geojson</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">bbox</span><span class="p">)]</span>
+
+            <span class="c1"># Save the cropped GeoJSON with the same naming pattern</span>
+            <span class="n">cropped_geojson_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">cropped_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">raster_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.geojson&quot;</span>
+            <span class="p">)</span>
+            <span class="n">cropped_geojson</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">cropped_geojson_filename</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cropped_dir</span></div>
+
+
+
 <div class="viewcode-block" id="process_single">
 <a class="viewcode-back" href="../../scripts.html#scripts.batch_geojson2coco.process_single">[docs]</a>
 <span class="k">def</span> <span class="nf">process_single</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The main script with a sinle threaded implementation.&quot;&quot;&quot;</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_dir</span>
 
     <span class="n">individual_coco_datasets</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List to store individual COCO datasets</span>
@@ -131,7 +204,7 @@
         <span class="c1"># Check if the file is a GeoTIFF</span>
         <span class="k">if</span> <span class="n">raster_file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.tif&quot;</span><span class="p">):</span>
             <span class="c1"># Get the file name without extension</span>
-            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">raster_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">raster_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">already_processed</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2"> as it is already processed.&quot;</span><span class="p">)</span>
                 <span class="c1"># add the json file to the list</span>
@@ -141,6 +214,9 @@
                 <span class="k">continue</span>
             <span class="c1"># Construct the vector file name</span>
             <span class="n">vector_file</span> <span class="o">=</span> <span class="n">file_name</span> <span class="o">+</span> <span class="n">args</span><span class="o">.</span><span class="n">pattern</span> <span class="o">+</span> <span class="s2">&quot;.geojson&quot;</span>
+
+            <span class="c1"># print(f&quot;Processing {vector_file} | {raster_file}&quot;)</span>
+
             <span class="n">vector_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">vector_dir</span><span class="p">,</span> <span class="n">vector_file</span><span class="p">)</span>
 
             <span class="c1"># Check if the vector file exists</span>
@@ -163,8 +239,9 @@
                 <span class="c1"># Specify the overlap</span>
                 <span class="n">overlap</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">overlap</span>
 
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The class column is: &quot;</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">class_column</span><span class="p">)</span>
                 <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">vector_file</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">raster_file</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">info_file</span><span class="si">}</span><span class="s2"> &gt; &gt; &gt; &gt; </span><span class="si">{</span><span class="n">json_file</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">vector_file</span><span class="si">}</span><span class="se">\t</span><span class="s2">| </span><span class="si">{</span><span class="n">raster_file</span><span class="si">}</span><span class="se">\t</span><span class="s2">| </span><span class="si">{</span><span class="n">info_file</span><span class="si">}</span><span class="s2"> &gt; &gt; &gt; &gt; </span><span class="si">{</span><span class="n">json_file</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
                 <span class="c1"># Construct the command</span>
@@ -212,6 +289,70 @@
 
 
 
+<div class="viewcode-block" id="parse_arguments">
+<a class="viewcode-back" href="../../scripts.html#scripts.batch_geojson2coco.parse_arguments">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Convert raster and vector pairs to COCO JSON format.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--raster-dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the raster directory.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--vector-dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the vector directory.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--output-dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the output directory.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--tile-size&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Tile width/height in meters.&quot;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--class-column&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Column name in GeoJSON for classes. Should always be provided. If the column does not exist, will create a new column with the name provided.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--overlap&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Overlap between tiles in percentage. Defaults to 0.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--pattern&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pattern to match the vector file name. Defaults to </span><span class="si">%(default)s</span><span class="s2">.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--concatenate&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Concatenate individual COCO datasets into one.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--info&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the info JSON file. Either leave empty, or put a folder path., containing info.json for each raster, with the same names as the rasters.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--resume&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Resume a batch job from an output directory.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--no-workers&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of workers to use for parallel processing.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--user_assumed_raster_crs&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If the raster crs is not defined in the raster file, you can provide it here. It will be used to crop the geojson file to the extent of the raster file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../scripts.html#scripts.batch_geojson2coco.main">[docs]</a>
 <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -228,75 +369,42 @@
 <span class="sd">        python batch_geojson2coco.py --raster-dir /path/to/raster_dir --vector-dir /path/to/vector_dir --output-dir /path/to/output_dir --concatenate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Convert raster and vector pairs to COCO JSON format.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--raster-dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the raster directory.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--vector-dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the vector directory.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--output-dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the output directory.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--tile-size&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Tile width/height in meters.&quot;</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--class-column&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Column name in GeoJSON for classes. Should always be provided. If the column does not exist, will create a new column with the name provided.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--overlap&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Overlap between tiles in percentage. Defaults to 0.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--pattern&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pattern to match the vector file name. Defaults to _building.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--concatenate&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Concatenate individual COCO datasets into one.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--info&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the info JSON file. Either leave empty, or put a folder path., containing info.json for each raster, with the same names as the rasters.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--resume&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Resume a batch job from an output directory.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--no-workers&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of workers to use for parallel processing.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 
-    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="c1"># Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">vector_dir</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">vector_dir</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.geojson&quot;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;The vector-dir is not a directory, and is a geojson file. Cropping it to the extent of the raster file.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">vector_dir</span> <span class="o">=</span> <span class="n">crop_and_save_geojson</span><span class="p">(</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">raster_dir</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">vector_dir</span><span class="p">,</span>
+                <span class="n">raster_extension</span><span class="o">=</span><span class="s2">&quot;.tif&quot;</span><span class="p">,</span>
+                <span class="n">user_crs</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">user_assumed_raster_crs</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The vector-dir is not a directory, and is not a geojson file. Please provide a directory or a geojson file.&quot;</span>
+            <span class="p">)</span>
 
-    <span class="c1"># Specify the output directory</span>
+        <span class="c1"># Specify the output directory</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">no_workers</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Parallel processing not implemented yet.&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running geojson2coco.py over raster and vector pairs:&quot;</span><span class="p">)</span>
         <span class="n">individual_coco_datasets</span> <span class="o">=</span> <span class="n">process_single</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 
     <span class="c1"># Generate markdown output for individual COCO datasets</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running geojson2coco.py over raster and vector pairs:&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;| Raster File | Vector File | JSON File |&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;|-------------|-------------|-----------|&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;| Raster File</span><span class="se">\t</span><span class="s2">| Vector File</span><span class="se">\t</span><span class="s2">| JSON File</span><span class="se">\t</span><span class="s2">|&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;|------------</span><span class="se">\t</span><span class="s2">|------------</span><span class="se">\t</span><span class="s2">|----------</span><span class="se">\t</span><span class="s2">|&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">coco_file</span> <span class="ow">in</span> <span class="n">individual_coco_datasets</span><span class="p">:</span>
         <span class="n">pair_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">coco_file</span><span class="p">)</span>
         <span class="n">raster_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pair_dir</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.tif&quot;</span>
         <span class="n">vector_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pair_dir</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.geojson&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">raster_file</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">vector_file</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">coco_file</span><span class="si">}</span><span class="s2"> |&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;| </span><span class="si">{</span><span class="n">raster_file</span><span class="si">}</span><span class="se">\t</span><span class="s2">| </span><span class="si">{</span><span class="n">vector_file</span><span class="si">}</span><span class="se">\t</span><span class="s2">| </span><span class="si">{</span><span class="n">coco_file</span><span class="si">}</span><span class="se">\t</span><span class="s2">|&quot;</span><span class="p">)</span>
 
     <span class="c1"># Concatenate COCO datasets if the --concatenate argument is enabled</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">concatenate</span><span class="p">:</span>

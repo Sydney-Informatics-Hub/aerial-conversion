@@ -38,7 +38,7 @@ def resume(output_dir: str) -> list:
     # Check if the output directory does not exist, then return an empty list
     if not os.path.exists(output_dir):
         return processed
-    
+
     for sub_dir in os.listdir(output_dir):
         # Check for all subdirs
         if os.path.isdir(os.path.join(output_dir, sub_dir)):
@@ -50,7 +50,11 @@ def resume(output_dir: str) -> list:
 
 
 def crop_and_save_geojson(
-    raster_dir: str, geojson_path: str, raster_extension: str = ".tif", user_crs=None
+    raster_dir: str,
+    geojson_path: str,
+    raster_extension: str = ".tif",
+    user_crs=None,
+    force_overwrite=False,
 ):
     """Crop a GeoJSON file to the extent of a raster file and save it.
 
@@ -59,6 +63,7 @@ def crop_and_save_geojson(
         geojson_path (str): Path to the GeoJSON file.
         raster_extension (str, optional): Extension of the raster files. Defaults to '.tif'.
         user_crs ([type], optional): CRS of the raster files. Defaults to None.
+        force_overwrite (bool, optional): Force overwrite the cropped GeoJSON file. Defaults to False.
     """
 
     # Read the GeoJSON file
@@ -101,7 +106,10 @@ def crop_and_save_geojson(
             cropped_geojson_filename = os.path.join(
                 cropped_dir, os.path.basename(raster_file).split(".")[0] + ".geojson"
             )
-            cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
+            if os.path.exists(cropped_geojson_filename) and not force_overwrite:
+                continue
+            else:
+                cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
 
     return cropped_dir
 
@@ -253,13 +261,18 @@ def parse_arguments(args):
         help="Resume a batch job from an output directory.",
     )
     parser.add_argument(
+        "--force-overwrite",
+        action=argparse.BooleanOptionalAction,
+        help="Force overwrite the cropped GeoJSON file if they exist. Use this to ensure that the GeoJSON files are cropped to the extent of the raster files and up to date.",
+    )
+    parser.add_argument(
         "--no-workers",
         type=int,
         default=1,
         help="Number of workers to use for parallel processing.",
     )
     parser.add_argument(
-        "--user_assumed_raster_crs",
+        "--user-assumed-raster-crs",
         type=str,
         default=None,
         help="If the raster crs is not defined in the raster file, you can provide it here. It will be used to crop the geojson file to the extent of the raster file.",
@@ -295,6 +308,7 @@ def main(args=None):
                 args.vector_dir,
                 raster_extension=".tif",
                 user_crs=args.user_assumed_raster_crs,
+                force_overwrite=args.force_overwrite,
             )
         else:
             raise ValueError(

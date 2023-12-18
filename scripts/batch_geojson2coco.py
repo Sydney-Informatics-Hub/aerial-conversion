@@ -35,6 +35,10 @@ def resume(output_dir: str) -> list:
     """
 
     processed = []
+    # Check if the output directory does not exist, then return an empty list
+    if not os.path.exists(output_dir):
+        return processed
+    
     for sub_dir in os.listdir(output_dir):
         # Check for all subdirs
         if os.path.isdir(os.path.join(output_dir, sub_dir)):

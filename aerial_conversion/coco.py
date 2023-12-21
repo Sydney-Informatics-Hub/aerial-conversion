@@ -15,6 +15,7 @@ from shapely.geometry import Polygon
 
 from .orthogonalise import orthogonalise
 
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
 
@@ -70,7 +71,7 @@ def make_category(
     Returns:
         category (dict): COCO category object
     """
-
+    log.debug(f"Making category for {class_name} with ID {class_id}.")
     category = {
         "supercategory": supercategory,
         "id": int(class_id),
@@ -99,9 +100,14 @@ def make_category_object(
 
     # TODO: Implement way to read supercategory data.
 
+    log.debug(f"Making category object from {class_column} column.")
+
     classes = pd.DataFrame(geojson[class_column].unique(), columns=["class"])
     classes["class_id"] = classes.index
     categories_json = []
+
+    log.info(f"Making category object with {len(classes)} classes.")
+    log.info(f"The classes df is {str(classes)}")
 
     for _, row in classes.iterrows():
         categories_json.append(

@@ -22,6 +22,7 @@ from aerial_conversion.coco import (
 from aerial_conversion.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
 from aerial_conversion.tiles import save_tiles
 
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
 
@@ -67,7 +68,7 @@ def main(args=None):
     ap.add_argument(
         "--tile-size",
         default=1000,
-        type=int,
+        type=float,
         help="Int length in meters of square tiles to generate from raster. Defaults to 1000 meters.",
     )
     ap.add_argument(
@@ -158,6 +159,11 @@ def main(args=None):
     geojson_path = args.polygon_file
     out_path = args.tile_dir
     tile_size = args.tile_size
+    # change tile size to float from string
+    try:
+        tile_size = float(tile_size)
+    except ValueError:
+        pass
     user_crs = args.crs
     class_column = args.class_column
     trim_class = args.trim_class
@@ -200,11 +206,17 @@ def main(args=None):
 
     # Create class_id for category mapping
     # Check if the specified class column exists
-    #TODO: make less hacky
+    # TODO: make less hacky
     if args.class_column not in geojson.columns:
         # If it doesn't exist, create a new column with the specified name and fill it with the string value of class-column argument
+        log.error(
+            f"Class column {args.class_column} not found in GeoJSON. Will create one instead..."
+        )
         geojson[args.class_column] = args.class_column
     geojson["class_id"] = geojson[class_column].factorize()[0]
+    log.debug("Class column is: %s", class_column)
+    log.debug("Class id is: %s", geojson["class_id"])
+    log.debug("Trim class is: %s", trim_class)
     categories_json = make_category_object(geojson, class_column, trim_class)
 
     # If license is not supplied, use MIT by default

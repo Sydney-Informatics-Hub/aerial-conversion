@@ -22,6 +22,17 @@ logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
 
 
+def string_crop(string, chars):
+    try:
+        if len(string) > chars:
+            chars = chars - 2
+            return ".." + string[-chars:]
+        else:
+            return string
+    except TypeError:
+        return string
+
+
 def resume(output_dir: str) -> list:
     """Resume a batch job from an output directory.
 
@@ -168,7 +179,10 @@ def process_single(args):
 
                 print("The class column is: ", args.class_column)
                 print(
-                    f"Processing {vector_file}\t| {raster_file}\t| {info_file} > > > > {json_file}"
+                    f"Processing:\t vector_file:\t{vector_file}"
+                    + f"\t raster_file:\t{raster_file}"
+                    + f"\t info file:\t{info_file}"
+                    + f"\t json file:\t{json_file}"
                 )
 
                 # Construct the command
@@ -325,13 +339,15 @@ def main(args=None):
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")
     print()
-    print("| Raster File\t| Vector File\t| JSON File\t|")
-    print("|------------\t|------------\t|----------\t|")
+    print("| Raster File \t| Vector File \t| JSON File \t|")
+    print("| ----------- \t| ----------- \t| ----------\t|")
     for coco_file in individual_coco_datasets:
         pair_dir = os.path.dirname(coco_file)
         raster_file = os.path.basename(pair_dir) + ".tif"
         vector_file = os.path.basename(pair_dir) + ".geojson"
-        print(f"| {raster_file}\t| {vector_file}\t| {coco_file}\t|")
+        print(
+            f"| {string_crop(raster_file,13)}\t| {string_crop(vector_file,13)}\t| {string_crop(coco_file,11)}\t|"
+        )
 
     # Concatenate COCO datasets if the --concatenate argument is enabled
     if args.concatenate:

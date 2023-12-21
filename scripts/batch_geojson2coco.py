@@ -22,15 +22,18 @@ logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
 
 
-def string_crop(string, chars):
+def format_string(s, length=23):
     try:
-        if len(string) > chars:
-            chars = chars - 2
-            return ".." + string[-chars:]
+        if len(s) > length:
+            length = length - 3
+            s = "..." + s[-length:]
         else:
-            return string
+            format_specifier = "{:<" + str(length) + "." + str(length) + "}"
+            s = format_specifier.format(s)
+        return s
     except TypeError:
-        return string
+        format_specifier = "{:<" + str(length) + "." + str(length) + "}"
+        return format_specifier.format("NA")
 
 
 def resume(output_dir: str) -> list:
@@ -339,14 +342,18 @@ def main(args=None):
     # Generate markdown output for individual COCO datasets
     print("Running geojson2coco.py over raster and vector pairs:")
     print()
-    print("| Raster File \t| Vector File \t| JSON File \t|")
-    print("| ----------- \t| ----------- \t| ----------\t|")
+    print(
+        "|       Raster File       |       Vector File       |        JSON File        |"
+    )
+    print(
+        "| ----------------------- | ----------------------- | ----------------------- |"
+    )
     for coco_file in individual_coco_datasets:
         pair_dir = os.path.dirname(coco_file)
         raster_file = os.path.basename(pair_dir) + ".tif"
         vector_file = os.path.basename(pair_dir) + ".geojson"
         print(
-            f"| {string_crop(raster_file,13)}\t| {string_crop(vector_file,13)}\t| {string_crop(coco_file,11)}\t|"
+            f"| {format_string(raster_file,23)} | {format_string(vector_file,23)} | {format_string(coco_file,23)} |"
         )
 
     # Concatenate COCO datasets if the --concatenate argument is enabled

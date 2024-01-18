@@ -156,6 +156,7 @@ python -m coco_balance -i /path/to/input/coco.json -o /path/to/output/coco-catli
 ```
 
 `--int_cats` argument is a store-true argument. If it is set, the categories will be interpreted as integers. Otherwise, they will be interpreted as strings.
+
 `-c` argument is the categories to be isolated. They should be comma separated.
 
 

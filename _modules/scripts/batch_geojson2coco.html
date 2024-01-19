@@ -75,7 +75,6 @@
 <span class="sd">&quot;&quot;&quot;This script supports batch conversion of paired geojson and raster data into</span>
 <span class="sd">a series of COCO datasets.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
-<span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -371,11 +370,6 @@
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Force overwrite the cropped GeoJSON file if they exist. Use this to ensure that the GeoJSON files are cropped to the extent of the raster files and up to date.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;--roboflow_compatible&quot;</span><span class="p">,</span>
-        <span class="n">action</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">BooleanOptionalAction</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;If set, will also generate Roboflow compatible JSON and png files in a single directory named Roboflow.&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--no-workers&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -576,37 +570,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">concatenated_json_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">concatenated_coco</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Concatenated COCO dataset saved to: </span><span class="si">{</span><span class="n">concatenated_json_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="c1"># Add roboflow compatible JSON and png files in a single directory named Roboflow</span>
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">roboflow_compatible</span><span class="p">:</span>
-            <span class="n">roboflow_output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;Roboflow&quot;</span><span class="p">)</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">roboflow_output_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-            <span class="c1"># Save the concatenated COCO dataset as roboflow compatible JSON</span>
-            <span class="n">roboflow_json_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">roboflow_output_dir</span><span class="p">,</span> <span class="s2">&quot;concatenated.json&quot;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">roboflow_json_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">concatenated_coco</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Roboflow compatible JSON saved to: </span><span class="si">{</span><span class="n">roboflow_json_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Open the json file as a text file, then replace all image paths with the updated paths (/tile_ -&gt; _tile_), then save it</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">roboflow_json_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">roboflow_json</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-            <span class="n">roboflow_json</span> <span class="o">=</span> <span class="n">roboflow_json</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/tile_&quot;</span><span class="p">,</span> <span class="s2">&quot;_tile_&quot;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">roboflow_json_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">roboflow_json</span><span class="p">)</span>
-
-            <span class="c1"># Copy all png files in the subdirectories to the roboflow_output_dir</span>
-            <span class="n">in_pattern</span> <span class="o">=</span> <span class="n">roboflow_json_file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;concatenated.json&quot;</span><span class="p">,</span> <span class="s2">&quot;/**/*.png&quot;</span><span class="p">)</span>
-            <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">in_pattern</span><span class="p">)</span>
-
-            <span class="c1"># Copy files to the out_dir and rename the file to the name of the directory it was in+the file name</span>
-            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
-                <span class="c1"># print(file)</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;cp </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">roboflow_output_dir</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file</span><span class="p">)))</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Concatenated COCO dataset saved to: </span><span class="si">{</span><span class="n">concatenated_json_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 

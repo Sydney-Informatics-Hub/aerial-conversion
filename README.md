@@ -136,16 +136,10 @@ Please ensure the rasters in the raster directory are named similarly as the geo
 
 `--tile-size` argument is the size of the tiles in meters.
 
-<!-- ---
 
-## Documentation
+## Other Scripts
 
-The documentation for the project is provided in the [documentation](https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/_build/html/index.html) file.
-Please read the [documentation](https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/_build/html/index.html) for further informationon the project, modules, and dependencies. -->
-
----
-
-### Other Scripts
+### Balancing dataset
 
 To tinker with the dataset and balance it, the following scrips can be used. 
 
@@ -159,6 +153,14 @@ python -m coco_balance -i /path/to/input/coco.json -o /path/to/output/coco-catli
 
 `-c` argument is the categories to be isolated. They should be comma separated.
 
+<!-- ---
+
+## Documentation
+
+The documentation for the project is provided in the [documentation](https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/_build/html/index.html) file.
+Please read the [documentation](https://github.com/Sydney-Informatics-Hub/aerial-conversion/tree/main/docs/_build/html/index.html) for further informationon the project, modules, and dependencies. -->
+
+---
 
 ## Contributing to the Project
 

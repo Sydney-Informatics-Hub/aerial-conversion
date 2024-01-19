@@ -12,3 +12,7 @@ pre-commit
 Sphinx
 sphinx_rtd_theme
 pycocotools
+funcy
+argparse
+scikit-learn
+scikit-multilearn

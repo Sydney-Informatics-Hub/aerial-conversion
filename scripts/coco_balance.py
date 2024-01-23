@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # from pycocotools.coco import COCO
 import argparse
+import datetime
 import json
+import random
 
 import pandas as pd
 from tqdm import tqdm
@@ -37,6 +39,139 @@ def stats(json_data):
     cats_unique_per_image.columns = ["cats", "images"]
     print("stats for the diversity of cats in images")
     print(cats_unique_per_image)
+    return cats_per_image, cats_unique_per_image, cats_stat_per_image
+
+
+def class_crop(json_data):
+    annotation_list = []
+    annotations = json_data["annotations"]
+    for annot in annotations:
+        annotation_list.append(
+            {
+                "category_id": annot["category_id"],
+                "image_id": annot["image_id"],
+                "annotation_id": annot["id"],
+            }
+        )
+    annotation_df = pd.DataFrame(annotation_list)
+
+    # Group by 'image_id' and count unique 'category_id' for each group
+    unique_categories_per_image = annotation_df.groupby("image_id")[
+        "category_id"
+    ].nunique()
+    # Convert the Series to a DataFrame for better readability
+    unique_categories_df = unique_categories_per_image.reset_index()
+    unique_categories_df.columns = ["image_id", "unique_categories_count"]
+    # print(unique_categories_df)
+
+    # Group by 'image_id' and 'category_id', and count the occurrences
+    category_counts = (
+        annotation_df.groupby(["image_id", "category_id"])
+        .size()
+        .reset_index(name="count")
+    )
+    # print(category_counts)
+    # Create a pivot table with 'image_id' as rows, 'category_id' as columns, and 'count' as values
+    pivot_df = category_counts.pivot_table(
+        index="image_id", columns="category_id", values="count", fill_value=0
+    )
+    # Set values to int
+    pivot_df = pivot_df.astype(int).reset_index()
+    pivot_df.columns = [
+        f"cat_{x}" if x != "image_id" else "image_id" for x in pivot_df.columns
+    ]
+    print("\nannotation categories per image")
+    print(pivot_df)
+
+    # Find the frequencies in each class
+    class_frequencies = annotation_df.groupby("category_id").count().reset_index()
+    class_frequencies = class_frequencies[["category_id", "image_id"]]
+    class_frequencies.columns = ["category_id", "frequency"]
+    # Sort the frequencies
+    class_frequencies = class_frequencies.sort_values(by="frequency", ascending=True)
+    print("\nsorted class frequencies before balancing")
+    print(class_frequencies)
+
+    # List the images per each category
+    images_per_category = (
+        annotation_df.groupby("category_id")["image_id"].apply(list).reset_index()
+    )
+    images_per_category["image_id"] = images_per_category["image_id"].apply(
+        lambda x: list(set(x))
+    )
+    print("\nimage per category")
+    print(images_per_category)
+
+    # the number of images with only the middle category
+    mid_freq_cat = class_frequencies.iloc[len(class_frequencies) // 2]["category_id"]
+    low_freq_cat = class_frequencies.iloc[0]["category_id"]
+    high_freq_cat = class_frequencies.iloc[-1]["category_id"]
+
+    print("mid_cat is ", mid_freq_cat)
+
+    mid_freq_cat_image_ids = set(
+        images_per_category[images_per_category["category_id"] == mid_freq_cat][
+            "image_id"
+        ].values[0]
+    )
+    high_freq_cat_image_ids = set(
+        images_per_category[images_per_category["category_id"] == high_freq_cat][
+            "image_id"
+        ].values[0]
+    )
+    low_freq_cat_image_ids = set(
+        images_per_category[images_per_category["category_id"] == low_freq_cat][
+            "image_id"
+        ].values[0]
+    )
+
+    # find the mid_cat that are not in high and low cats
+    uniques_in_high_freq_cat = high_freq_cat_image_ids - (
+        mid_freq_cat_image_ids | low_freq_cat_image_ids
+    )
+    uniques_in_mid_freq_cat = mid_freq_cat_image_ids - (
+        high_freq_cat_image_ids | low_freq_cat_image_ids
+    )
+    uniques_in_low_freq_cat = low_freq_cat_image_ids - (
+        high_freq_cat_image_ids | mid_freq_cat_image_ids
+    )
+
+    print("high freq cat unique len:", len(uniques_in_high_freq_cat))
+    print("mid freq cat unique len:", len(uniques_in_mid_freq_cat))
+    print("low freq cat unique len:", len(uniques_in_low_freq_cat))
+
+    # sample fom the high freq cat with the number of mid images only
+    uniques_in_high_freq_cat_resampled = random.sample(
+        uniques_in_high_freq_cat, len(uniques_in_mid_freq_cat)
+    )
+    to_remove = uniques_in_high_freq_cat - set(uniques_in_high_freq_cat_resampled)
+    print("keeping", len(uniques_in_high_freq_cat_resampled))
+    print("removing", len(to_remove))
+
+    return to_remove
+
+
+def class_balance(json_data):
+    to_remove = class_crop(json_data)
+    # remove iamges with the given ids
+    images = json_data["images"]
+    new_images = []
+    for image in tqdm(images):
+        if image["id"] not in to_remove:
+            new_images.append(image)
+    print("Removed {} images".format(len(images) - len(new_images)))
+    json_data["images"] = new_images
+
+    # remove annotations with the removed images
+    annotations = json_data["annotations"]
+    new_annotations = []
+    for annot in tqdm(annotations):
+        if annot["image_id"] not in to_remove:
+            new_annotations.append(annot)
+    print("Removed {} annotations".format(len(annotations) - len(new_annotations)))
+    json_data["annotations"] = new_annotations
+
+    return json_data
 
 
 def isolate_cat(json_data: dict, cat_ids: list):
@@ -89,6 +224,10 @@ def main(args=None):
         json_data = json.load(f)
 
     # stats(json_data)
+
+    if args.balance_cats:
+        json_data = class_balance(json_data)
+
     if args.isolate_cat:
         cats = args.isolate_cat.split(",")
         if args.int_cats:
@@ -96,9 +235,19 @@ def main(args=None):
         json_data = isolate_cat(json_data, cats)
 
     # Save the COCO json file
-    print("Saving the COCO json file")
-    with open(args.output_path, "w") as f:
-        json.dump(json_data, f, indent=2)
+    if args.output_path is None:
+        response = input("Finish without an output file? ([y]/n)")
+        if response == "y":
+            print("Finishing without saving the COCO json file")
+        elif response == "n":
+            date = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            args.output_path = args.json_path.replace(".json", f"_balanced_{date}.json")
+            print("Saving to default output path", args.output_path)
+
+    if args.output_path is not None:
+        print("Saving the COCO json file")
+        with open(args.output_path, "w") as f:
+            json.dump(json_data, f, indent=2)
 
 
 def parse_arguments(args):
@@ -107,7 +256,11 @@ def parse_arguments(args):
         "--json_path", "-i", type=str, help="Path to your COCO json file"
     )
     parser.add_argument(
-        "--output_path", "-o", type=str, help="Path to your output COCO json file"
+        "--output_path",
+        "-o",
+        type=str,
+        default=None,
+        help="Path to your output COCO json file",
     )
     parser.add_argument(
         "--isolate_cat",
@@ -121,52 +274,9 @@ def parse_arguments(args):
         help="Set this flag if the categores are integers.",
     )
     parser.add_argument(
-        "--augmentation_low",
-        "-a",
-        type=float,
-        default=0,
-        help="Augmentation factor on low balance classes",
-    )
-    parser.add_argument(
-        "--augmentation_high",
-        "-b",
-        type=float,
-        default=0,
-        help="Augmentation factor on high balance classes",
-    )
-    parser.add_argument(
-        "--balance_remove_factor",
-        "-r",
-        type=float,
-        default=0,
-        help="Remove factor on high balance classes",
-    )
-    parser.add_argument(
-        "--balance_full",
+        "--balance_cats",
         action=argparse.BooleanOptionalAction,
         help="Smart balance the dataset. Will try to balance the dataset as much as possible by reducing the frequent classes after augmenting the less frequent classes.",
-    )
-    parser.add_argument(
-        "--noise",
-        type=float,
-        help="Level of noise to add to the dataset",
-    )
-    parser.add_argument(
-        "--flip",
-        action=argparse.BooleanOptionalAction,
-        help="Flip the images for augmenttion",
-    )
-    parser.add_argument(
-        "--rotate_min",
-        type=float,
-        default=0,
-        help="Rotate the images for augmenttion by at least this amound in degrees.",
-    )
-    parser.add_argument(
-        "--rotate_max",
-        type=float,
-        default=0,
-        help="Rotate the images for augmenttion by up to this amound in degrees. If zero, will not rotate the images.",
     )
 
     return parser.parse_args(args)

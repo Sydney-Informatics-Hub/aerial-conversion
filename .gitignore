@@ -160,3 +160,10 @@ cython_debug/
 #.idea/
 
 doc/_build/
+
+# Project specific
+data/*
+tiff_tiles/*
+
+# MacOS
+.DS_Store

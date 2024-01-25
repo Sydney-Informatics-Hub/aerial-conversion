@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore", category=rasterio.errors.NotGeoreferencedWarni
 def main():
     def parse_arguments():
         parser = argparse.ArgumentParser(
-            description="Convert a directory of JPEG aerial images into GeoTIFF format"
+            description="Convert a directory of aerial images into GeoTIFF format"
             "given a GeoJSON containing image boundaries."
         )
         parser.add_argument(
@@ -36,6 +36,12 @@ def main():
             default="./tiff_tiles",
             help="Name of output directory for converted TIFF format images.",
         )
+        parser.add_argument(
+            "--image_types",
+            type=list,
+            default=(".jpg",".jpeg"),
+            help="List of image file extensions to consider, defaulting to .jpg and .jpeg"
+        )
         return parser.parse_args()
 
     args = parse_arguments()
@@ -45,22 +51,22 @@ def main():
 
     # Get all the JPEGs in the input dir
     all_files = glob.glob(os.path.join(args.input_dir, "*"))
-    jpeg_files = [
+    image_files = [
         file
         for file in all_files
-        if os.path.splitext(file)[1].lower() in (".jpg", "jpeg")
+        if os.path.splitext(file)[1].lower() in args.image_types
     ]
     # Get GeoJSON as a GeoPandas DataFrame
     gdf = geopandas.read_file(args.input_geojson)
 
-    for jpeg_file in jpeg_files:
-        filename = os.path.splitext(os.path.basename(jpeg_file))[0]
+    for image_file in image_files:
+        filename = os.path.splitext(os.path.basename(image_file))[0]
         output_file = os.path.join(args.output_tiff_dir, filename + ".tif")
 
         # Get leading digits in the string and bail out if we have nothing
         numeric_id_list = re.findall(r"^\d+", filename)
         if len(numeric_id_list) < 1:
-            print(f"No ID found for {jpeg_file}. Skipping ...")
+            print(f"No ID found for {image_file}. Skipping ...")
             continue
         id = int(numeric_id_list[0])
 
@@ -76,7 +82,7 @@ def main():
             desired_row.iloc[0][edge] for edge in ["left", "bottom", "right", "top"]
         ]
 
-        dataset = rasterio.open(jpeg_file, "r")
+        dataset = rasterio.open(image_file, "r")
         # Assuming RGB here
         bands = [1, 2, 3]
         data = dataset.read(bands)
@@ -95,7 +101,7 @@ def main():
             transform=transform,
             crs=crs,
         ) as dst:
-            print(f"{jpeg_file} -> {output_file}")
+            print(f"{image_file} -> {output_file}")
             dst.write(data, indexes=bands)
 
 

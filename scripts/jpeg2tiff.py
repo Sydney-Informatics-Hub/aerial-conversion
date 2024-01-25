@@ -31,17 +31,17 @@ def main():
             "from the initial numeric characters of the input filename will be searched for the tile boundaries.",
         )
         parser.add_argument(
-            "--output_tif_dir",
+            "--output_tiff_dir",
             type=str,
-            default="./tif_tiles",
-            help="Name of output directory for converted TIF format images.",
+            default="./tiff_tiles",
+            help="Name of output directory for converted TIFF format images.",
         )
         return parser.parse_args()
 
     args = parse_arguments()
 
     # Make the output directory if necessary
-    os.makedirs(args.output_tif_dir, exist_ok=True)
+    os.makedirs(args.output_tiff_dir, exist_ok=True)
 
     # Get all the JPEGs in the input dir
     all_files = glob.glob(os.path.join(args.input_dir, "*"))
@@ -55,7 +55,7 @@ def main():
 
     for jpeg_file in jpeg_files:
         filename = os.path.splitext(os.path.basename(jpeg_file))[0]
-        output_file = os.path.join(args.output_tif_dir, filename + ".tif")
+        output_file = os.path.join(args.output_tiff_dir, filename + ".tif")
 
         # Get leading digits in the string and bail out if we have nothing
         numeric_id_list = re.findall(r"^\d+", filename)

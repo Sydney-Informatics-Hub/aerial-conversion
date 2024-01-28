@@ -137,7 +137,18 @@ Please ensure the rasters in the raster directory are named similarly as the geo
 `--tile-size` argument is the size of the tiles in meters.
 
 
-## Other Scripts
+## Other Scrpts
+
+### Splitting Dataset
+
+Splitting dataset to train, test, and validation sets can be achieved using the following script:
+
+```bash
+python -m aerial_conversion.scripts.coco_split -s 0.7 /path/to/concatenated_coco.json /path/to/save/output/train.json /path/to/save/output/test_valid.json
+
+python -m aerial_conversion.scripts.coco_split -s 0.667 /path/to/test_valid.json /path/to/save/output/test.json /path/to/save/output/valid.json
+```
+
 
 ### Balancing dataset
 
@@ -161,6 +172,7 @@ python -m aerial_conversion.scripts.coco_balance -i /path/to/input/coco.json -o 
 ```
 
 `--balance_cats` argument is a store-true argument. If it is set, the dataset will be balanced by removing a subsample of the images which have only a single category (the biggest category).
+
 
 
 <!-- ---

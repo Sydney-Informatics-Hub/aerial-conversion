@@ -43,6 +43,19 @@ def stats(json_data):
 
 
 def class_crop(json_data):
+    """Find the images that have only the high frequency category and mark a
+    subsample that is makes the frequency larger than the mid-frequency classes
+    for removal.
+
+    Args:
+        json_data (dict): the json data of the coco dataset
+
+    Returns:
+        set: the ids of the images to remove
+
+    Example:
+    >>> to_remove = class_crop(json_data)
+    """
     annotation_list = []
     annotations = json_data["annotations"]
     for annot in annotations:
@@ -152,6 +165,15 @@ def class_crop(json_data):
 
 
 def class_balance(json_data):
+    """Balance the dataset by removing a subsample of images with the high
+    frequency category.
+
+    Args:
+        json_data (dict): the json data of the coco dataset
+
+    Returns:
+        dict: the json data of the balanced coco dataset
+    """
     to_remove = class_crop(json_data)
     # remove iamges with the given ids
     images = json_data["images"]
@@ -175,6 +197,15 @@ def class_balance(json_data):
 
 
 def isolate_cat(json_data: dict, cat_ids: list):
+    """Isolate the given categories from the dataset.
+
+    Args:
+        json_data (dict): the json data of the coco dataset
+        cat_ids (list): the ids of the categories to isolate
+
+    Returns:
+        dict: the json data of the isolated coco dataset
+    """
     # Limit the annotations to the given categories
     print("Limiting the annotations to the given categories")
     annotations = json_data["annotations"]
@@ -271,12 +302,12 @@ def parse_arguments(args):
     parser.add_argument(
         "--int_cats",
         action=argparse.BooleanOptionalAction,
-        help="Set this flag if the categores are integers.",
+        help="Set this flag if the categores are integers in isolate cats function.",
     )
     parser.add_argument(
         "--balance_cats",
         action=argparse.BooleanOptionalAction,
-        help="Smart balance the dataset. Will try to balance the dataset as much as possible by reducing the frequent classes after augmenting the less frequent classes.",
+        help="Smart balance the dataset. Will try to balance the dataset as much as possible by removing a subsample of the high-frequncy-class-only images.",
     )
 
     return parser.parse_args(args)

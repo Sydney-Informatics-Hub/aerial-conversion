@@ -29,6 +29,7 @@ dynamic = ["dependencies"]
 batch_geojson2coco = "aerial_conversion.scripts.batch_geojson2coco:main"
 coco2geojson = "aerial_conversion.scripts.coco2geojson:main"
 geojson2coco = "aerial_conversion.scripts.geojson2coco:main"
+jpeg2tiff = "aerial_conversion.scripts.jpeg2tiff:main"
 
 [tool.setuptools]
 packages = ["aerial_conversion", "aerial_conversion.scripts", "aerial_conversion.orthogonalise"]

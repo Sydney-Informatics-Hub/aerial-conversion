@@ -164,6 +164,8 @@ doc/_build/
 # Project specific
 data/*
 tiff_tiles/*
+aerial_conversion/data/*
+aerial_conversion/tiff_tiles/*
 
 # MacOS
 .DS_Store

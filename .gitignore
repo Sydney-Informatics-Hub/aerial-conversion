@@ -162,50 +162,50 @@ cython_debug/
 #.idea/
 
 # Project specific
-aerial_annotation/data/*
-aerial_annotation/draft/*.xml
-aerial_annotation/draft/*.png
-aerial_annotation/draft/*.txt
-aerial_annotation/draft/*json
-aerial_annotation/draft/*.csv
-aerial_annotation/draft/*.tif
-aerial_annotation/draft/xw*
-aerial_annotation/draft/test/
-aerial_annotation/draft/sa1*
-aerial_annotation/data/.DS_Store
+aigis_annotate/data/*
+aigis_annotate/draft/*.xml
+aigis_annotate/draft/*.png
+aigis_annotate/draft/*.txt
+aigis_annotate/draft/*json
+aigis_annotate/draft/*.csv
+aigis_annotate/draft/*.tif
+aigis_annotate/draft/xw*
+aigis_annotate/draft/test/
+aigis_annotate/draft/sa1*
+aigis_annotate/data/.DS_Store
 
-aerial_segmentation/notebooks/gis-hd-200x200-3/
-aerial_segmentation/notebooks/output/
-aerial_segmentation/notebooks/wandb/
-aerial_segmentation/.DS_Store
-aerial_segmentation/weights/chatswood_buildings_poc.pth
+aigis_segment/notebooks/gis-hd-200x200-3/
+aigis_segment/notebooks/output/
+aigis_segment/notebooks/wandb/
+aigis_segment/.DS_Store
+aigis_segment/weights/chatswood_buildings_poc.pth
 
-aerial_segmentation/weights/*
-aerial_segmentation/output_data/*
-aerial_segmentation/detectron2/*
-aerial_segmentation/detectron2
-aerial_segmentation/urban-small-2/*
-aerial_segmentation/demo_data/*
+aigis_segment/weights/*
+aigis_segment/output_data/*
+aigis_segment/detectron2/*
+aigis_segment/detectron2
+aigis_segment/urban-small-2/*
+aigis_segment/demo_data/*
 
-aerial_segmentation/output/model.ts
-aerial_segmentation/output/model.txt
-aerial_segmentation/output/model_ts_code.txt
-aerial_segmentation/output/model_ts_IR.txt
-aerial_segmentation/output/model_ts_IR_inlined.txt
-aerial_segmentation/wandb/
+aigis_segment/output/model.ts
+aigis_segment/output/model.txt
+aigis_segment/output/model_ts_code.txt
+aigis_segment/output/model_ts_IR.txt
+aigis_segment/output/model_ts_IR_inlined.txt
+aigis_segment/wandb/
 
-aerial_segmentation/demo_data/concatenated_coco.json
-aerial_annotation/.DS_Store
+aigis_segment/demo_data/concatenated_coco.json
+aigis_annotate/.DS_Store
 doc/_build/
 
 # Project specific
 data/*
 tiff_tiles/*
-aerial_conversion/data/*
-aerial_conversion/tiff_tiles/*
+aigis_convert/data/*
+aigis_convert/tiff_tiles/*
 
 # MacOS
 .DS_Store
-aerial_annotation/.DS_Store
+aigis_annotate/.DS_Store
 */.DS_Store
 */*/.DS_Store

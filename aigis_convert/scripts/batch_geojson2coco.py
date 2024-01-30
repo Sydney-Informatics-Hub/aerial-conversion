@@ -2,7 +2,6 @@
 """This script supports batch conversion of paired geojson and raster data into
 a series of COCO datasets."""
 import argparse
-import glob
 import json
 import logging
 import os
@@ -284,11 +283,6 @@ def parse_arguments(args):
         help="Force overwrite the cropped GeoJSON file if they exist. Use this to ensure that the GeoJSON files are cropped to the extent of the raster files and up to date.",
     )
     parser.add_argument(
-        "--roboflow_compatible",
-        action=argparse.BooleanOptionalAction,
-        help="If set, will also generate Roboflow compatible JSON and png files in a single directory named Roboflow.",
-    )
-    parser.add_argument(
         "--no-workers",
         type=int,
         default=1,
@@ -487,36 +481,6 @@ def main(args=None):
             json.dump(concatenated_coco.dataset, f, indent=2)
 
         print(f"\nConcatenated COCO dataset saved to: {concatenated_json_file}")
-
-        # Add roboflow compatible JSON and png files in a single directory named Roboflow
-        if args.roboflow_compatible:
-            roboflow_output_dir = os.path.join(args.output_dir, "Roboflow")
-            os.makedirs(roboflow_output_dir, exist_ok=True)
-
-            # Save the concatenated COCO dataset as roboflow compatible JSON
-            roboflow_json_file = os.path.join(roboflow_output_dir, "concatenated.json")
-            with open(roboflow_json_file, "w") as f:
-                json.dump(concatenated_coco.dataset, f, indent=2)
-
-            print(f"Roboflow compatible JSON saved to: {roboflow_json_file}")
-
-            # Open the json file as a text file, then replace all image paths with the updated paths (/tile_ -> _tile_), then save it
-            with open(roboflow_json_file, "r") as f:
-                roboflow_json = f.read()
-            roboflow_json = roboflow_json.replace("/tile_", "_tile_")
-            with open(roboflow_json_file, "w") as f:
-                f.write(roboflow_json)
-
-            # Copy all png files in the subdirectories to the roboflow_output_dir
-            in_pattern = roboflow_json_file.replace("concatenated.json", "/**/*.png")
-            files = glob.glob(in_pattern)
-
-            # Copy files to the out_dir and rename the file to the name of the directory it was in+the file name
-            for file in tqdm(files):
-                # print(file)
-                os.system(
-                    f"cp {file} {os.path.join(roboflow_output_dir,os.path.basename(os.path.dirname(file)))}_{os.path.basename(file)}"
-                )
 
 
 if __name__ == "__main__":

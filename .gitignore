@@ -181,7 +181,6 @@ aerial_segmentation/.DS_Store
 aerial_segmentation/weights/chatswood_buildings_poc.pth
 
 aerial_segmentation/weights/*
-.DS_Store
 aerial_segmentation/output_data/*
 aerial_segmentation/detectron2/*
 aerial_segmentation/detectron2
@@ -196,7 +195,6 @@ aerial_segmentation/output/model_ts_IR_inlined.txt
 aerial_segmentation/wandb/
 
 aerial_segmentation/demo_data/concatenated_coco.json
-.DS_Store
 aerial_annotation/.DS_Store
 doc/_build/
 
@@ -208,4 +206,5 @@ aerial_conversion/tiff_tiles/*
 
 # MacOS
 .DS_Store
-
+*/.DS_Store
+*/*/.DS_Store

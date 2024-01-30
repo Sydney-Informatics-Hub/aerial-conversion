@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="[https://cdn-icons-png.flaticon.com/512/6295/6295417.png](https://github.com/Sydney-Informatics-Hub/aigis/assets/50643975/7925231f-9834-414a-8898-4eaf6c97f6e9)" width="100" />
+  ![Screenshot 2024-01-30 at 12 25 30 pm](https://github.com/Sydney-Informatics-Hub/aigis/assets/50643975/b8713425-0ea8-4be0-875f-7b7f7b97d773)
 </p>
 <p align="center">
     <h1 align="center">AIGIS</h1>

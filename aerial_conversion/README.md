@@ -72,12 +72,13 @@ cfg.DATASETS.TEST = (f"{dataset_name}_test",)
 
 
 
+
 ## Usage
 
 To create tiles from a raster file, use the following command:
 
 
-```
+```bash
 python -m aerial_conversion.scripts.geojson2coco \
                 --raster-file /path/to/data/chatswood_hd.tif \
                 --polygon-file /path/to/data/chatswood.geojson \
@@ -89,7 +90,7 @@ python -m aerial_conversion.scripts.geojson2coco \
 
 To merge multiple COCO JSON files, and yield a geojson file for the input raster, use the following command:
 
-```
+```bash
 python -m aerial_conversion.scripts.coco2geojson \
                 /path/to/data/raster_tiles/dir \
                 /path/to/data/predictions-coco.json \
@@ -101,7 +102,7 @@ python -m aerial_conversion.scripts.coco2geojson \
 
 To do a batch conversion, when the conversion should be carried on multiple input images, use the following command:
 
-```
+```bash
 python -m aerial_conversion.scripts.batch_geojson2coco \
                 --raster-dir /path/to/data/rasters/ \
                 --vector-dir /path/to/data/geojsons/ \
@@ -135,6 +136,44 @@ Please ensure the rasters in the raster directory are named similarly as the geo
 
 
 `--tile-size` argument is the size of the tiles in meters.
+
+
+## Other Scripts
+
+### Splitting Dataset
+
+Splitting dataset to train, test, and validation sets can be achieved using the following script:
+
+```bash
+python -m aerial_conversion.scripts.coco_split -s 0.7 /path/to/concatenated_coco.json /path/to/save/output/train.json /path/to/save/output/test_valid.json
+
+python -m aerial_conversion.scripts.coco_split -s 0.667 /path/to/test_valid.json /path/to/save/output/test.json /path/to/save/output/valid.json
+```
+
+
+### Balancing dataset
+
+To tinker with the dataset and balance it, the following scrips can be used. 
+
+To isolate the categories:
+    
+```bash
+python -m aerial_conversion.scripts.coco_balance -i /path/to/input/coco.json -o /path/to/output/coco-catlimited.json -c '<category 1>,<category 2>,...' --int_cats
+```
+
+`--int_cats` argument is a store-true argument. If it is set, the categories will be interpreted as integers. Otherwise, they will be interpreted as strings.
+
+`-c` argument is the categories to be isolated. They should be comma separated.
+
+
+To balance the dataset by removing a subsample of the images which have only a single category (the biggest category):
+
+```bash
+python -m aerial_conversion.scripts.coco_balance -i /path/to/input/coco.json -o /path/to/output/coco-balanced.json --balance_cats
+```
+
+`--balance_cats` argument is a store-true argument. If it is set, the dataset will be balanced by removing a subsample of the images which have only a single category (the biggest category).
+
 
 <!-- ---
 

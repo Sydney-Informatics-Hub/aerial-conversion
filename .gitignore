@@ -195,3 +195,5 @@ aerial_segmentation/output/model_ts_IR_inlined.txt
 aerial_segmentation/wandb/
 
 aerial_segmentation/demo_data/concatenated_coco.json
+.DS_Store
+aerial_annotation/.DS_Store

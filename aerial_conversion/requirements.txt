@@ -1,0 +1,14 @@
+tqdm
+pandas
+pillow
+matplotlib
+shapely
+geopandas
+rioxarray
+rasterio
+geoplot
+fiona
+pre-commit
+Sphinx
+sphinx_rtd_theme
+pycocotools

@@ -71,6 +71,8 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# docs/_build/
+
 # PyBuilder
 .pybuilder/
 target/
@@ -159,7 +161,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-
 # Project specific
 aerial_annotation/data/*
 aerial_annotation/draft/*.xml
@@ -197,3 +198,14 @@ aerial_segmentation/wandb/
 aerial_segmentation/demo_data/concatenated_coco.json
 .DS_Store
 aerial_annotation/.DS_Store
+doc/_build/
+
+# Project specific
+data/*
+tiff_tiles/*
+aerial_conversion/data/*
+aerial_conversion/tiff_tiles/*
+
+# MacOS
+.DS_Store
+

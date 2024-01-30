@@ -2,7 +2,7 @@
     <h1 align="center">AIGIS</h1>
 </p>
 <p align="center">
-    <em>Annotate, Segment, and convert </em>
+    <em>AI annotation, segmentation, and conversion tools for GIS imagery</em>
 </p>
 <p align="center">
 	<img src="https://img.shields.io/github/license/Sydney-Informatics-Hub/aigis?style=flat&color=0080ff" alt="license">

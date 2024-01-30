@@ -209,3 +209,4 @@ aigis_convert/tiff_tiles/*
 aigis_annotate/.DS_Store
 */.DS_Store
 */*/.DS_Store
+git-filter-repo.py

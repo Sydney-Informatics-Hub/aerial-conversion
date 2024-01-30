@@ -209,3 +209,5 @@ aerial_conversion/tiff_tiles/*
 # MacOS
 .DS_Store
 
+.DS_Store
+aerial_annotation/.DS_Store

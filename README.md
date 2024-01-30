@@ -21,9 +21,9 @@
 
 `aigis` is a comprehensive toolkit for aerial and satellite imagery processing, annotation, and analysis using artificial intelligence. This repository contains three main components:
 
-1. **Aerial Annotation:** Tools for annotating aerial imagery data.
-2. **Aerial Conversion:** Utilities for converting aerial imagery data to various formats, including COCO, GeoJSON, etc.
-3. **Aerial Segmentation:** Scripts and notebooks for segmenting aerial imagery using deep learning models.
+1. **aigis annotate:** Tools for annotating aerial imagery data.
+2. **aigis convert:** Utilities for converting aerial imagery data to various formats, including COCO, GeoJSON, etc.
+3. **aigis segment:** Scripts and notebooks for segmenting aerial imagery using deep learning models.
 
 ## Installation
 
@@ -37,29 +37,29 @@ cd aigis
 To work with each of the sub modules individually, navigate to their directories and install their dependencies:
 
 ```bash
-cd aerial_annotation
+cd aigis_annotate
 pip install -r requirements.txt
 ```
 
 ```bash
-cd ../aerial_conversion
+cd ../aigis_convert
 pip install -r requirements.txt
 ```
 
 ```bash
-cd ../aerial_segmentation
+cd ../aigis_segment
 pip install -r requirements.txt
 ```
 
 ## Usage
 
-### Aerial Annotation
+### aigis annotate
 This component provides scripts for annotating aerial imagery data. Detailed usage instructions can be found in the aerial_annotation directory.
 
-### Aerial Conversion
+### aigis convert
 Aerial Conversion includes tools for converting aerial imagery data to various formats. For detailed instructions, refer to the aerial_conversion directory.
 
-### Aerial Segmentation
+### aigis segment
 Aerial Segmentation contains scripts and notebooks for segmenting aerial imagery using deep learning models. Refer to the aerial_segmentation directory for more details.
 
 ##  Contributing

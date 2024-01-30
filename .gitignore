@@ -211,3 +211,4 @@ aerial_conversion/tiff_tiles/*
 
 .DS_Store
 aerial_annotation/.DS_Store
+*/.DS_Store

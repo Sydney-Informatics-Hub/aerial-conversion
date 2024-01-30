@@ -1,4 +1,6 @@
+<p align="center">
 ![Screenshot 2024-01-30 at 12 25 30 pm](https://github.com/Sydney-Informatics-Hub/aigis/assets/50643975/b8713425-0ea8-4be0-875f-7b7f7b97d773)
+</p>
 <p align="center">
     <h1 align="center">AIGIS</h1>
 </p>

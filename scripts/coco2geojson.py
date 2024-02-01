@@ -114,12 +114,11 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
         polygons_df (GeoDataFrame): GeoDataFrame of merged polygons
     """
     print(
-        "Using the unary_union method to merge overlapping polygons in each class/zone."
+        "Using the unary_union method to merge overlapping polygons in each class/zone.\n"
     )
     # polygons_df_zone_groups = []
-    for index, tiles_df_zone in tqdm(
-        enumerate(tiles_df_zone_groups), total=len(tiles_df_zone_groups)
-    ):
+    for index, tiles_df_zone in enumerate(tiles_df_zone_groups):
+        print(f"Processing zone {index} of {len(tiles_df_zone_groups)}")
         tiles_df_zone = tiles_df_zone.reset_index(drop=True)
 
         # Convert segmentations to polygons
@@ -130,10 +129,23 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
             axis=1,
         )
 
+        # Validate geometries
+        valid_geometries = []
+        for geom in tqdm(tiles_df_zone["geometry"], total=tiles_df_zone.shape[0]):
+            # Check if geometry is valid
+            if not geom.is_valid:
+                print(f"Invalid geometry found at index {index}: {geom}")
+                # Attempt to fix the invalid geometry
+                geom = geom.buffer(0)
+                if not geom.is_valid:
+                    print(f"Unable to fix geometry at index {index}, skipping")
+                    continue
+            valid_geometries.append(geom)
+
         # Merge overlapping polygons in each class/zone
         zone_name = tiles_df_zone["zone_name"][0]
         zone_code = tiles_df_zone["zone_code"][0]
-        multipolygon = unary_union(tiles_df_zone["geometry"])
+        multipolygon = unary_union(valid_geometries)
         # polygons = list(multipolygon.geoms)
 
         if index == 0:

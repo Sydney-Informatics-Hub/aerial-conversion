@@ -192,12 +192,11 @@
 <span class="sd">        polygons_df (GeoDataFrame): GeoDataFrame of merged polygons</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span>
-        <span class="s2">&quot;Using the unary_union method to merge overlapping polygons in each class/zone.&quot;</span>
+        <span class="s2">&quot;Using the unary_union method to merge overlapping polygons in each class/zone.</span><span class="se">\n</span><span class="s2">&quot;</span>
     <span class="p">)</span>
     <span class="c1"># polygons_df_zone_groups = []</span>
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">tiles_df_zone</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
-        <span class="nb">enumerate</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">)</span>
-    <span class="p">):</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">tiles_df_zone</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing zone </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">tiles_df_zone</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Convert segmentations to polygons</span>
@@ -208,10 +207,23 @@
             <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># Validate geometries</span>
+        <span class="n">valid_geometries</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">geom</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span> <span class="n">total</span><span class="o">=</span><span class="n">tiles_df_zone</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># Check if geometry is valid</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">geom</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid geometry found at index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">geom</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># Attempt to fix the invalid geometry</span>
+                <span class="n">geom</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">geom</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to fix geometry at index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">, skipping&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="n">valid_geometries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">geom</span><span class="p">)</span>
+
         <span class="c1"># Merge overlapping polygons in each class/zone</span>
         <span class="n">zone_name</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;zone_name&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">zone_code</span> <span class="o">=</span> <span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;zone_code&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">multipolygon</span> <span class="o">=</span> <span class="n">unary_union</span><span class="p">(</span><span class="n">tiles_df_zone</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">])</span>
+        <span class="n">multipolygon</span> <span class="o">=</span> <span class="n">unary_union</span><span class="p">(</span><span class="n">valid_geometries</span><span class="p">)</span>
         <span class="c1"># polygons = list(multipolygon.geoms)</span>
 
         <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

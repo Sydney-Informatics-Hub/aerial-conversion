@@ -296,7 +296,7 @@ def main(args=None):
     meta_name = args.meta_name
     coco_json_path = args.cocojson
     tile_extension = args.tile_extension
-    simplify_tolerance = float(args.simplify_tolerance)
+    simplify_tolerance = args.simplify_tolerance
     minimum_rotated_rectangle = args.minimum_rotated_rectangle
     orthogonalisation = args.orthogonalisation
 
@@ -304,9 +304,12 @@ def main(args=None):
     print(f"> Reading tiles from {tile_dir}")
     print(f"> Reading COCO JSON from {coco_json_path}")
     print(f"> Writing GeoJSON to {geojson_path}")
-    print(f"> Simplify tolerance: {float(simplify_tolerance)}")
+    print(f"> Simplify tolerance (float): {float(simplify_tolerance)}")
+    print(f"> Simplify tolerance: {simplify_tolerance}")
     print(f"> Minimum rotated rectangle: {minimum_rotated_rectangle}")
     print(f"> Orthogonalisation: {orthogonalisation}")
+
+    simplify_tolerance = float(simplify_tolerance)
 
     # keep_geom_type = (
     #     not args.not_keep_geom_type

@@ -380,9 +380,17 @@
     <span class="n">meta_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">meta_name</span>
     <span class="n">coco_json_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cocojson</span>
     <span class="n">tile_extension</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tile_extension</span>
-    <span class="n">simplify_tolerance</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">simplify_tolerance</span>
+    <span class="n">simplify_tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">simplify_tolerance</span><span class="p">)</span>
     <span class="n">minimum_rotated_rectangle</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">minimum_rotated_rectangle</span>
     <span class="n">orthogonalisation</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">orthogonalisation</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Arguments:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Reading tiles from </span><span class="si">{</span><span class="n">tile_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Reading COCO JSON from </span><span class="si">{</span><span class="n">coco_json_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Writing GeoJSON to </span><span class="si">{</span><span class="n">geojson_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Simplify tolerance: </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">simplify_tolerance</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Minimum rotated rectangle: </span><span class="si">{</span><span class="n">minimum_rotated_rectangle</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Orthogonalisation: </span><span class="si">{</span><span class="n">orthogonalisation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># keep_geom_type = (</span>
     <span class="c1">#     not args.not_keep_geom_type</span>

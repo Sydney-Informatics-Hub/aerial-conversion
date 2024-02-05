@@ -283,17 +283,18 @@
 <a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.main">[docs]</a>
 <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Command-line driver.&quot;&quot;&quot;</span>
-    <span class="n">test_data_path</span> <span class="o">=</span> <span class="s2">&quot;/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/&quot;</span>
+    <span class="c1"># test_data_path = &quot;/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/&quot;</span>
     <span class="n">ap</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;tiledir&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="n">test_data_path</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the input tiles directory with rasters. PNG files are not required.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;cocojson&quot;</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_data_path</span><span class="p">,</span> <span class="s2">&quot;coco-out-tol_0.4-b.json&quot;</span><span class="p">),</span>
+        <span class="c1"># default=os.path.join(test_data_path, &quot;coco-out-tol_0.4-b.json&quot;),</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to the input coco json file.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -306,13 +307,16 @@
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--geojson-output&quot;</span><span class="p">,</span>
         <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
-        <span class="c1"># required=True,</span>
-        <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">test_data_path</span><span class="p">,</span>
-            <span class="sa">f</span><span class="s2">&quot;coco_2_geojson_</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">.geojson&quot;</span><span class="p">,</span>
-        <span class="p">),</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to output geojson file.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--geoparquet-output&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;-p&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to output geoparquet file.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">ap</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;--tile-search-margin&quot;</span><span class="p">,</span>
@@ -376,6 +380,7 @@
 <span class="sd">    Read tiles and COCO JSON, and convert to GeoJSON.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">geojson_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">geojson_output</span>
+    <span class="n">geopardquet_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">geoparquet_output</span>
     <span class="n">tile_dir</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">tiledir</span>
     <span class="n">meta_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">meta_name</span>
     <span class="n">coco_json_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">cocojson</span>
@@ -387,11 +392,12 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Arguments:&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Reading tiles from </span><span class="si">{</span><span class="n">tile_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Reading COCO JSON from </span><span class="si">{</span><span class="n">coco_json_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Writing GeoJSON to </span><span class="si">{</span><span class="n">geojson_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Simplify tolerance (float): </span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">simplify_tolerance</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Simplify tolerance: </span><span class="si">{</span><span class="n">simplify_tolerance</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Minimum rotated rectangle: </span><span class="si">{</span><span class="n">minimum_rotated_rectangle</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Orthogonalisation: </span><span class="si">{</span><span class="n">orthogonalisation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Writing Geoparquet to: </span><span class="si">{</span><span class="n">geopardquet_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&gt; Writing GeoJSON to </span><span class="si">{</span><span class="n">geojson_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">simplify_tolerance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">simplify_tolerance</span><span class="p">)</span>
 
@@ -467,7 +473,18 @@
         <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not set Name property of geojson. Error message: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;FIX this code!&quot;</span><span class="p">)</span>
     <span class="c1"># Save to geojson</span>
-    <span class="n">polygons_df</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">geojson_path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">geopardquet_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">geojson_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;coco_2_geojson_</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">.geojson&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Geojson and geoparquet paths are not set. Saving geojson to default path: </span><span class="si">{</span><span class="n">geojson_path</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">geojson_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">polygons_df</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">geojson_path</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">geopardquet_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">polygons_df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">geopardquet_path</span><span class="p">)</span></div>
 
 
 

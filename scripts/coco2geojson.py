@@ -199,17 +199,18 @@ def shape_regulariser(
 
 def main(args=None):
     """Command-line driver."""
-    test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
+    # test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "tiledir",
         type=Path,
-        default=test_data_path,
+        required=True,
         help="Path to the input tiles directory with rasters. PNG files are not required.",
     )
     ap.add_argument(
         "cocojson",
-        default=os.path.join(test_data_path, "coco-out-tol_0.4-b.json"),
+        # default=os.path.join(test_data_path, "coco-out-tol_0.4-b.json"),
+        required=True,
         type=Path,
         help="Path to the input coco json file.",
     )
@@ -222,13 +223,16 @@ def main(args=None):
     ap.add_argument(
         "--geojson-output",
         "-o",
-        # required=True,
-        default=os.path.join(
-            test_data_path,
-            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
-        ),
+        default=None,
         type=Path,
         help="Path to output geojson file.",
+    )
+    ap.add_argument(
+        "--geoparquet-output",
+        "-p",
+        default=None,
+        type=Path,
+        help="Path to output geoparquet file.",
     )
     ap.add_argument(
         "--tile-search-margin",
@@ -292,6 +296,7 @@ def main(args=None):
     Read tiles and COCO JSON, and convert to GeoJSON.
     """
     geojson_path = args.geojson_output
+    geopardquet_path = args.geoparquet_output
     tile_dir = args.tiledir
     meta_name = args.meta_name
     coco_json_path = args.cocojson
@@ -303,11 +308,12 @@ def main(args=None):
     print("Arguments:")
     print(f"> Reading tiles from {tile_dir}")
     print(f"> Reading COCO JSON from {coco_json_path}")
-    print(f"> Writing GeoJSON to {geojson_path}")
     print(f"> Simplify tolerance (float): {float(simplify_tolerance)}")
     print(f"> Simplify tolerance: {simplify_tolerance}")
     print(f"> Minimum rotated rectangle: {minimum_rotated_rectangle}")
     print(f"> Orthogonalisation: {orthogonalisation}")
+    print(f"> Writing Geoparquet to: {geopardquet_path}")
+    print(f"> Writing GeoJSON to {geojson_path}")
 
     simplify_tolerance = float(simplify_tolerance)
 
@@ -383,7 +389,18 @@ def main(args=None):
         log.error(f"Could not set Name property of geojson. Error message: {e}")
         print("FIX this code!")
     # Save to geojson
-    polygons_df.to_file(geojson_path, driver="GeoJSON")
+    if geojson_path is None and geopardquet_path is None:
+        geojson_path = os.path.join(
+            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
+        )
+        print(
+            f"Geojson and geoparquet paths are not set. Saving geojson to default path: {geojson_path}"
+        )
+
+    if geojson_path is not None:
+        polygons_df.to_file(geojson_path, driver="GeoJSON")
+    if geopardquet_path is not None:
+        polygons_df.to_parquet(geopardquet_path)
 
 
 if __name__ == "__main__":

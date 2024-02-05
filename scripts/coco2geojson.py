@@ -204,13 +204,11 @@ def main(args=None):
     ap.add_argument(
         "tiledir",
         type=Path,
-        required=True,
         help="Path to the input tiles directory with rasters. PNG files are not required.",
     )
     ap.add_argument(
         "cocojson",
         # default=os.path.join(test_data_path, "coco-out-tol_0.4-b.json"),
-        required=True,
         type=Path,
         help="Path to the input coco json file.",
     )

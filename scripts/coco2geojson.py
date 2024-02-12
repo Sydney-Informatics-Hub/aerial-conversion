@@ -303,6 +303,11 @@ def main(args=None):
     minimum_rotated_rectangle = args.minimum_rotated_rectangle
     orthogonalisation = args.orthogonalisation
 
+    if geojson_path is None and geopardquet_path is None:
+        geojson_path = os.path.join(
+            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
+        )
+
     print("Arguments:")
     print(f"> Reading tiles from {tile_dir}")
     print(f"> Reading COCO JSON from {coco_json_path}")
@@ -386,15 +391,8 @@ def main(args=None):
     except Exception as e:
         log.error(f"Could not set Name property of geojson. Error message: {e}")
         print("FIX this code!")
-    # Save to geojson
-    if geojson_path is None and geopardquet_path is None:
-        geojson_path = os.path.join(
-            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
-        )
-        print(
-            f"Geojson and geoparquet paths are not set. Saving geojson to default path: {geojson_path}"
-        )
 
+    # Save to geojson
     if geojson_path is not None:
         polygons_df.to_file(geojson_path, driver="GeoJSON")
     if geopardquet_path is not None:

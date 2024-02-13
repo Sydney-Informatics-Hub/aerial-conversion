@@ -14,7 +14,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 from tqdm import tqdm
 
@@ -36,6 +36,22 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 log = logging.getLogger(__name__)
 
 tqdm.pandas()
+
+
+def convert_multipolygon_to_polygons(geometry):
+    """Convert a MultiPolygon to a list of Polygons.
+
+    Args:
+        geometry (shapely.geometry.MultiPolygon): MultiPolygon to convert
+
+    Returns:
+        list: List of Polygons
+    """
+
+    if isinstance(geometry, MultiPolygon):
+        return list(geometry.geoms)
+    else:
+        return [geometry]
 
 
 def merge_class_polygons_geopandas(tiles_df_zone_groups, crs, keep_geom_type):
@@ -370,9 +386,45 @@ def main(args=None):
     polygons_df = merge_class_polygons_shapely(tiles_df_zone_groups, crs)
     # polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow
 
-    # change crs of the gpd and its geometries to "epsg:4326"
+    # Save to geojson before orthogonalisation
+
+    if geojson_path is not None and (
+        simplify_tolerance != 0
+        or minimum_rotated_rectangle is True
+        or orthogonalisation is True
+    ):
+        try:
+            polygons_df.to_file(
+                geojson_path.replace(".gejson", "-presimplification.geojson"),
+                driver="GeoJSON",
+            )
+        except Exception as e:
+            log.error(f"Could not save the raw file to geojson. Error message: {e}")
+
+    if geopardquet_path is not None and (
+        simplify_tolerance != 0
+        or minimum_rotated_rectangle is True
+        or orthogonalisation is True
+    ):
+        try:
+            polygons_df.to_parquet(
+                geopardquet_path.replace(".geoparquet", "-presimplification.geoparquet")
+            )
+        except Exception as e:
+            log.error(f"Could not save the raw file to geoparquet. Error message: {e}")
+
+    # change crs of the gpd and its geometries to "epsg:4326" temporarily
     original_crs = polygons_df.crs
     polygons_df = polygons_df.to_crs("epsg:4326")
+
+    # Change multipolygons to polygons
+    print("Converting MultiPolygons to Polygons.")
+    polygons_df["geometry"] = (
+        polygons_df["geometry"]
+        .apply(lambda geom: convert_multipolygon_to_polygons(geom))
+        .explode()
+        .reset_index(drop=True)
+    )
 
     print("Regularising the shape of the polygons.")
     # print(polygons_df)

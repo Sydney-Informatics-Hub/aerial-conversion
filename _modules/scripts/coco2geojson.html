@@ -283,13 +283,16 @@
 <span class="sd">        shapely.geometry.Polygon: Regularised polygon</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">polygon_point_tuples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">polygon</span><span class="o">.</span><span class="n">exterior</span><span class="o">.</span><span class="n">coords</span><span class="p">)</span>
-    <span class="n">polygon</span> <span class="o">=</span> <span class="n">polygon_prep</span><span class="p">(</span>
-        <span class="n">polygon_point_tuples</span><span class="p">,</span>
-        <span class="n">simplify_tolerance</span><span class="p">,</span>
-        <span class="n">minimum_rotated_rectangle</span><span class="p">,</span>
-        <span class="n">orthogonalisation</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">polygon</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">polygon_prep</span><span class="p">(</span>
+            <span class="n">polygon_point_tuples</span><span class="p">,</span>
+            <span class="n">simplify_tolerance</span><span class="p">,</span>
+            <span class="n">minimum_rotated_rectangle</span><span class="p">,</span>
+            <span class="n">orthogonalisation</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">polygon</span> <span class="o">=</span> <span class="n">Polygon</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not regularise the polygon. Error message: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">polygon</span></div>
 

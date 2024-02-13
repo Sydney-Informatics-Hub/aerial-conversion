@@ -199,13 +199,16 @@ def shape_regulariser(
         shapely.geometry.Polygon: Regularised polygon
     """
     polygon_point_tuples = list(polygon.exterior.coords)
-    polygon = polygon_prep(
-        polygon_point_tuples,
-        simplify_tolerance,
-        minimum_rotated_rectangle,
-        orthogonalisation,
-    )
-    polygon = Polygon(polygon)
+    try:
+        polygon = polygon_prep(
+            polygon_point_tuples,
+            simplify_tolerance,
+            minimum_rotated_rectangle,
+            orthogonalisation,
+        )
+        polygon = Polygon(polygon)
+    except Exception as e:
+        log.error(f"Could not regularise the polygon. Error message: {e}")
 
     return polygon
 

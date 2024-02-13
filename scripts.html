@@ -59,6 +59,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#module-scripts.coco2geojson">scripts.coco2geojson module</a><ul>
+<li><a class="reference internal" href="#scripts.coco2geojson.convert_multipolygon_to_polygons"><code class="docutils literal notranslate"><span class="pre">convert_multipolygon_to_polygons()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_geopandas"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_geopandas()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_shapely"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_shapely()</span></code></a></li>
@@ -182,6 +183,23 @@ python batch_geojson2coco.py –raster-dir /path/to/raster_dir –vector-dir /pa
 <span id="scripts-coco2geojson-module"></span><h2>scripts.coco2geojson module<a class="headerlink" href="#module-scripts.coco2geojson" title="Link to this heading"></a></h2>
 <p>This script supports converting a COCO dataset into a georeferenced geojson
 file.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.coco2geojson.convert_multipolygon_to_polygons">
+<span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">convert_multipolygon_to_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#convert_multipolygon_to_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.convert_multipolygon_to_polygons" title="Link to this definition"></a></dt>
+<dd><p>Convert a MultiPolygon to a list of Polygons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>geometry</strong> (<em>shapely.geometry.MultiPolygon</em>) – MultiPolygon to convert</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of Polygons</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="scripts.coco2geojson.main">
 <span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.main" title="Link to this definition"></a></dt>

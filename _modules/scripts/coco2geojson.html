@@ -130,6 +130,40 @@
 
 
 
+<div class="viewcode-block" id="multipolygon_to_polygons">
+<a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.multipolygon_to_polygons">[docs]</a>
+<span class="k">def</span> <span class="nf">multipolygon_to_polygons</span><span class="p">(</span><span class="n">gdf</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a GeoDataFrame with MultiPolygons to a GeoDataFrame with</span>
+<span class="sd">    Polygons.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        gdf (GeoDataFrame): GeoDataFrame with MultiPolygons</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        GeoDataFrame: GeoDataFrame with Polygons</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create an empty list to hold the converted geometries</span>
+    <span class="n">new_geometries</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Iterate over each row in the GeoDataFrame</span>
+    <span class="k">for</span> <span class="n">geometry</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">gdf</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">gdf</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># If the geometry is a MultiPolygon</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">MultiPolygon</span><span class="p">):</span>
+            <span class="c1"># Convert each part of the MultiPolygon into a separate Polygon</span>
+            <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="n">geometry</span><span class="p">:</span>
+                <span class="n">new_geometries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If it&#39;s not a MultiPolygon, just append the original geometry</span>
+            <span class="n">new_geometries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Create a new GeoDataFrame with the converted geometries</span>
+    <span class="n">new_gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">(</span><span class="n">geometry</span><span class="o">=</span><span class="n">new_geometries</span><span class="p">)</span>
+    <span class="n">new_gdf</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">crs</span>
+
+    <span class="k">return</span> <span class="n">new_gdf</span></div>
+
+
+
 <div class="viewcode-block" id="merge_class_polygons_geopandas">
 <a class="viewcode-back" href="../../scripts.html#scripts.coco2geojson.merge_class_polygons_geopandas">[docs]</a>
 <span class="k">def</span> <span class="nf">merge_class_polygons_geopandas</span><span class="p">(</span><span class="n">tiles_df_zone_groups</span><span class="p">,</span> <span class="n">crs</span><span class="p">,</span> <span class="n">keep_geom_type</span><span class="p">):</span>
@@ -509,12 +543,13 @@
 
     <span class="c1"># Change multipolygons to polygons</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Converting MultiPolygons to Polygons.&quot;</span><span class="p">)</span>
-    <span class="n">polygons_df</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">polygons_df</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span>
-        <span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">geom</span><span class="p">:</span> <span class="n">convert_multipolygon_to_polygons</span><span class="p">(</span><span class="n">geom</span><span class="p">))</span>
-        <span class="o">.</span><span class="n">explode</span><span class="p">()</span>
-        <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="c1"># polygons_df[&quot;geometry&quot;] = (</span>
+    <span class="c1">#     polygons_df[&quot;geometry&quot;]</span>
+    <span class="c1">#     .apply(lambda geom: convert_multipolygon_to_polygons(geom))</span>
+    <span class="c1">#     .explode()</span>
+    <span class="c1">#     .reset_index(drop=True)</span>
+    <span class="c1"># )</span>
+    <span class="n">polygons_df</span> <span class="o">=</span> <span class="n">multipolygon_to_polygons</span><span class="p">(</span><span class="n">polygons_df</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Regularising the shape of the polygons.&quot;</span><span class="p">)</span>
     <span class="c1"># print(polygons_df)</span>

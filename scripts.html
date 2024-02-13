@@ -63,6 +63,7 @@
 <li><a class="reference internal" href="#scripts.coco2geojson.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_geopandas"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_geopandas()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.merge_class_polygons_shapely"><code class="docutils literal notranslate"><span class="pre">merge_class_polygons_shapely()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.coco2geojson.multipolygon_to_polygons"><code class="docutils literal notranslate"><span class="pre">multipolygon_to_polygons()</span></code></a></li>
 <li><a class="reference internal" href="#scripts.coco2geojson.shape_regulariser"><code class="docutils literal notranslate"><span class="pre">shape_regulariser()</span></code></a></li>
 </ul>
 </li>
@@ -245,6 +246,24 @@ file.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>polygons_df (GeoDataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="scripts.coco2geojson.multipolygon_to_polygons">
+<span class="sig-prename descclassname"><span class="pre">scripts.coco2geojson.</span></span><span class="sig-name descname"><span class="pre">multipolygon_to_polygons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gdf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/coco2geojson.html#multipolygon_to_polygons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scripts.coco2geojson.multipolygon_to_polygons" title="Link to this definition"></a></dt>
+<dd><p>Convert a GeoDataFrame with MultiPolygons to a GeoDataFrame with
+Polygons.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gdf</strong> (<em>GeoDataFrame</em>) – GeoDataFrame with MultiPolygons</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>GeoDataFrame with Polygons</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GeoDataFrame</p>
 </dd>
 </dl>
 </dd></dl>

@@ -54,6 +54,37 @@ def convert_multipolygon_to_polygons(geometry):
         return [geometry]
 
 
+def multipolygon_to_polygons(gdf):
+    """Convert a GeoDataFrame with MultiPolygons to a GeoDataFrame with
+    Polygons.
+
+    Args:
+        gdf (GeoDataFrame): GeoDataFrame with MultiPolygons
+
+    Returns:
+        GeoDataFrame: GeoDataFrame with Polygons
+    """
+    # Create an empty list to hold the converted geometries
+    new_geometries = []
+
+    # Iterate over each row in the GeoDataFrame
+    for geometry in tqdm(gdf.geometry, total=gdf.shape[0]):
+        # If the geometry is a MultiPolygon
+        if isinstance(geometry, MultiPolygon):
+            # Convert each part of the MultiPolygon into a separate Polygon
+            for polygon in geometry:
+                new_geometries.append(polygon)
+        else:
+            # If it's not a MultiPolygon, just append the original geometry
+            new_geometries.append(geometry)
+
+    # Create a new GeoDataFrame with the converted geometries
+    new_gdf = gpd.GeoDataFrame(geometry=new_geometries)
+    new_gdf.crs = gdf.crs
+
+    return new_gdf
+
+
 def merge_class_polygons_geopandas(tiles_df_zone_groups, crs, keep_geom_type):
     """Merge overlapping polygons in each class/zone.
 
@@ -422,12 +453,13 @@ def main(args=None):
 
     # Change multipolygons to polygons
     print("Converting MultiPolygons to Polygons.")
-    polygons_df["geometry"] = (
-        polygons_df["geometry"]
-        .apply(lambda geom: convert_multipolygon_to_polygons(geom))
-        .explode()
-        .reset_index(drop=True)
-    )
+    # polygons_df["geometry"] = (
+    #     polygons_df["geometry"]
+    #     .apply(lambda geom: convert_multipolygon_to_polygons(geom))
+    #     .explode()
+    #     .reset_index(drop=True)
+    # )
+    polygons_df = multipolygon_to_polygons(polygons_df)
 
     print("Regularising the shape of the polygons.")
     # print(polygons_df)

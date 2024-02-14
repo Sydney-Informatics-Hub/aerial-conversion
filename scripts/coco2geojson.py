@@ -165,7 +165,7 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
     )
     # polygons_df_zone_groups = []
     for index, tiles_df_zone in enumerate(tiles_df_zone_groups):
-        print(f"Processing zone {index} of {len(tiles_df_zone_groups)}")
+        print(f"Processing zone {index+1} of {len(tiles_df_zone_groups)}")
         tiles_df_zone = tiles_df_zone.reset_index(drop=True)
 
         # Convert segmentations to polygons

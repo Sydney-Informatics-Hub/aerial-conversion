@@ -435,7 +435,7 @@ def main(args=None):
         except Exception as e:
             log.error(f"Could not save the raw file to geojson. Error message: {e}")
 
-    if geopardquet_path is not None and (
+    if (
         simplify_tolerance != 0
         or minimum_rotated_rectangle is True
         or orthogonalisation is True

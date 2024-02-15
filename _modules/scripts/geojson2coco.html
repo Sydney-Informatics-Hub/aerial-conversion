@@ -296,6 +296,9 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Class id is: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">geojson</span><span class="p">[</span><span class="s2">&quot;class_id&quot;</span><span class="p">])</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trim class is: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">trim_class</span><span class="p">)</span>
     <span class="n">categories_json</span> <span class="o">=</span> <span class="n">make_category_object</span><span class="p">(</span><span class="n">geojson</span><span class="p">,</span> <span class="n">class_column</span><span class="p">,</span> <span class="n">trim_class</span><span class="p">)</span>
+    
+    <span class="c1"># Make sure geojson class_column is string type</span>
+    <span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">geojson</span><span class="p">[</span><span class="n">class_column</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 
     <span class="c1"># If license is not supplied, use MIT by default</span>
     <span class="k">if</span> <span class="n">license</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

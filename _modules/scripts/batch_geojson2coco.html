@@ -198,6 +198,11 @@
             <span class="c1"># Crop the GeoJSON to the extent of the raster</span>
             <span class="n">cropped_geojson</span> <span class="o">=</span> <span class="n">geojson</span><span class="p">[</span><span class="n">geojson</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">intersects</span><span class="p">(</span><span class="n">bbox</span><span class="p">)]</span>
 
+            <span class="c1"># Drop id feild from the geojson properties if there are duplicates</span>
+            <span class="k">if</span> <span class="s1">&#39;id&#39;</span> <span class="ow">in</span> <span class="n">cropped_geojson</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">cropped_geojson</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">cropped_geojson</span> <span class="o">=</span> <span class="n">cropped_geojson</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">])</span>
+            
+
             <span class="c1"># Save the cropped GeoJSON with the same naming pattern</span>
             <span class="n">cropped_geojson_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                 <span class="n">cropped_dir</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">raster_file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.geojson&quot;</span>
@@ -205,7 +210,8 @@
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">cropped_geojson_filename</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_overwrite</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">cropped_geojson</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">cropped_geojson_filename</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">cropped_geojson</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                    <span class="n">cropped_geojson</span><span class="o">.</span><span class="n">to_file</span><span class="p">(</span><span class="n">cropped_geojson_filename</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GeoJSON&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">cropped_dir</span></div>
 

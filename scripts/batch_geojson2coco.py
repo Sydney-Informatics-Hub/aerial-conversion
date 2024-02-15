@@ -117,6 +117,11 @@ def crop_and_save_geojson(
             # Crop the GeoJSON to the extent of the raster
             cropped_geojson = geojson[geojson.geometry.intersects(bbox)]
 
+            # Drop id feild from the geojson properties if there are duplicates
+            if 'id' in cropped_geojson.columns and cropped_geojson['id'].duplicated().any():
+                cropped_geojson = cropped_geojson.drop(columns=['id'])
+            
+
             # Save the cropped GeoJSON with the same naming pattern
             cropped_geojson_filename = os.path.join(
                 cropped_dir, os.path.basename(raster_file).split(".")[0] + ".geojson"
@@ -124,7 +129,8 @@ def crop_and_save_geojson(
             if os.path.exists(cropped_geojson_filename) and not force_overwrite:
                 continue
             else:
-                cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
+                if not cropped_geojson.empty:
+                    cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
 
     return cropped_dir
 
